@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico?v=6.3.0">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+  <meta name="description" content="前面一篇文章已经讲了 DAGScheduler 中的 stage 划分算法。 实际上就是每当执行到 RDD 的 action 算子时会去调用 DAGScheduler 的 handleJobSubmitted 方法，这个方法内部会根据当前的 RDD 创建一个 ResultStage，然后根据这个 ResultStage 对象创建一个 Job。 再将这个 stage 对象传入 submitStage">
+<meta name="keywords" content="Spark">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark 源码分析（八）:DAGScheduler 源码分析2（task 最佳位置计算）">
+<meta property="og:url" content="http://zhuleiblog.com/posts/BigData/2019-07-03-Spark-源码分析（八）-DAGScheduler-源码分析2（task-最佳位置计算）.html">
+<meta property="og:site_name" content="朱磊">
+<meta property="og:description" content="前面一篇文章已经讲了 DAGScheduler 中的 stage 划分算法。 实际上就是每当执行到 RDD 的 action 算子时会去调用 DAGScheduler 的 handleJobSubmitted 方法，这个方法内部会根据当前的 RDD 创建一个 ResultStage，然后根据这个 ResultStage 对象创建一个 Job。 再将这个 stage 对象传入 submitStage">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-07-03T15:40:57.290Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spark 源码分析（八）:DAGScheduler 源码分析2（task 最佳位置计算）">
+<meta name="twitter:description" content="前面一篇文章已经讲了 DAGScheduler 中的 stage 划分算法。 实际上就是每当执行到 RDD 的 action 算子时会去调用 DAGScheduler 的 handleJobSubmitted 方法，这个方法内部会根据当前的 RDD 创建一个 ResultStage，然后根据这个 ResultStage 对象创建一个 Job。 再将这个 stage 对象传入 submitStage">
+
+
+
+
+
+
+  <link rel="canonical" href="http://zhuleiblog.com/posts/BigData/2019-07-03-Spark-源码分析（八）-DAGScheduler-源码分析2（task-最佳位置计算）.html">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Spark 源码分析（八）:DAGScheduler 源码分析2（task 最佳位置计算） | 朱磊</title>
+  
+
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?084a44ac8106ee8c8af269853fa68cda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">朱磊</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">select * from life</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签<span class="badge">69</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类<span class="badge">11</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">86</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+    <div class="reading-progress-bar"></div>
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/BigData/2019-07-03-Spark-源码分析（八）-DAGScheduler-源码分析2（task-最佳位置计算）.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="朱磊">
+      <meta itemprop="description" content="stone">
+      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="朱磊">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Spark 源码分析（八）:DAGScheduler 源码分析2（task 最佳位置计算）
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-03 17:37:54" itemprop="dateCreated datePublished" datetime="2019-07-03T17:37:54+08:00">2019-07-03</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/BigData/" itemprop="url" rel="index"><span itemprop="name">BigData</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>前面一篇文章已经讲了 DAGScheduler 中的 stage 划分算法。</p>
+<p>实际上就是每当执行到 RDD 的 action 算子时会去调用 DAGScheduler 的 handleJobSubmitted 方法，这个方法内部会根据当前的 RDD 创建一个 ResultStage，然后根据这个 ResultStage 对象创建一个 Job。</p>
+<p>再将这个 stage 对象传入 submitStage 方法，这个方法内部会调用一些其它方法，会根据当前 stage 中的那个 RDD 的依赖链往前推，依据 RDD 之间的依赖关系，碰到宽依赖就创建一个新的 stage，窄依赖就将当前 RDD 加入当前 stage 中，一直到所有 RDD 都遍历完。</p>
+<p>至此所有的 stage 就划分完了。</p>
+<a id="more"></a>
+<p>在前面的 submitStage 方法中会找到划分出的 stage 中的第一个 stage，然后调用 submitMissingTasks 方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (missing.isEmpty) &#123;</span><br><span class="line">          logInfo(<span class="string">"Submitting "</span> + stage + <span class="string">" ("</span> + stage.rdd + <span class="string">"), which has no missing parents"</span>)</span><br><span class="line">          <span class="comment">// 找到第一个 stage 去调用 submitMissingTasks 方法</span></span><br><span class="line">          submitMissingTasks(stage, jobId.get)</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<p>submitMissingTasks 方法中做了这些事：</p>
+<p>1，拿到 stage 中没有计算的 partition；</p>
+<p>2，获取 task 对应的 partition 的最佳位置，这个是这里主要讲解的算法；</p>
+<p>3，获取 taskBinary，将 stage 的 RDD 和 ShuffleDependency（或 func）广播到 Executor；</p>
+<p>4，为 stage 创建 task；</p>
+<p>这个方法的代码很多，我们主要分析下怎么分配 task 到最优的 partition 上去的，也就是计算 partitionId 和 taskId 的对应关系。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 计算 taskId 和 partition 的对应关系	</span></span><br><span class="line">val taskIdToLocations: Map[Int, Seq[TaskLocation]] = <span class="keyword">try</span> &#123;</span><br><span class="line">      stage match &#123;</span><br><span class="line">        <span class="comment">// 如果是 ShuffleMapStage</span></span><br><span class="line">        <span class="keyword">case</span> s: ShuffleMapStage =&gt;</span><br><span class="line">          partitionsToCompute.map &#123; id =&gt; (id, getPreferredLocs(stage.rdd, id))&#125;.toMap</span><br><span class="line">        <span class="comment">// 如果是 ResultStage</span></span><br><span class="line">        <span class="keyword">case</span> s: ResultStage =&gt;</span><br><span class="line">          partitionsToCompute.map &#123; id =&gt;</span><br><span class="line">            val p = s.partitions(id)</span><br><span class="line">            (id, getPreferredLocs(stage.rdd, p))</span><br><span class="line">          &#125;.toMap</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> &#123;</span><br><span class="line">      <span class="function"><span class="keyword">case</span> <span class="title">NonFatal</span><span class="params">(e)</span> </span>=&gt;</span><br><span class="line">        stage.makeNewStageAttempt(partitionsToCompute.size)</span><br><span class="line">        listenerBus.post(SparkListenerStageSubmitted(stage.latestInfo, properties))</span><br><span class="line">        abortStage(stage, s<span class="string">"Task creation failed: $e\n$&#123;Utils.exceptionString(e)&#125;"</span>, Some(e))</span><br><span class="line">        runningStages -= stage</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>可以看出主要是调用了 getPreferredLocs 这个方法，这个方法实际上是调用了 getPreferredLocsInternal 这个方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span>[spark]</span><br><span class="line">  <span class="function">def <span class="title">getPreferredLocs</span><span class="params">(rdd: RDD[_], partition: Int)</span>: Seq[TaskLocation] </span>= &#123;</span><br><span class="line">    getPreferredLocsInternal(rdd, partition, <span class="keyword">new</span> HashSet)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>下面主要看下 getPreferredLocsInternal 这个方法做了哪些操作：</p>
+<p>1，判断 RDD 的 partition 是否被操作过了，如果被操作过了就什么都不做；</p>
+<p>2，查看当前 RDD 的 partition 的最佳计算位置是否被缓存过，如果被缓存过直接返回对应的缓存位置；</p>
+<p>3，如果没有缓存，就调用 RDD 的 preferredLocations 去计算最佳位置，实际上就是看看当前 RDD 是否被 checkpoint 了，如果有就返回 checkpoint 的位置；</p>
+<p>4，如果当前 RDD 既没有被缓存又没有 checkpoint 的话，就去遍历 RDD 的依赖链，如果有窄依赖，就去遍历父 RDD 的所有 partition，递归调用 getPreferredLocsInternal 方法。</p>
+<p>这里实际上就是找出当前 stage 中是否存在某个 RDD 被缓存或者 checkpoint了，如果有就返回其缓存或者 checkpoint 的位置，添加到序列中，然后返回。如果当前 stage 中的所有 RDD 都没有被缓存或者 checkpoint 的话，那么 task 的最佳计算位置就返回 Nil。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> def <span class="title">getPreferredLocsInternal</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">      rdd: RDD[_],</span></span></span><br><span class="line"><span class="function"><span class="params">      partition: Int,</span></span></span><br><span class="line"><span class="function"><span class="params">      visited: HashSet[(RDD[_], Int)</span>]): Seq[TaskLocation] </span>= &#123;</span><br><span class="line">    <span class="comment">// 如果这个 rdd 的 partition 已经计算过了位置了就忽略</span></span><br><span class="line">  	<span class="comment">// 因为这个方法是被递归调用的</span></span><br><span class="line">    <span class="keyword">if</span> (!visited.add((rdd, partition))) &#123;</span><br><span class="line">      <span class="comment">// Nil has already been returned for previously visited partitions.</span></span><br><span class="line">      <span class="keyword">return</span> Nil</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 如果这个 partition 被缓存过就返回缓存的位置</span></span><br><span class="line">    val cached = getCacheLocs(rdd)(partition)</span><br><span class="line">    <span class="keyword">if</span> (cached.nonEmpty) &#123;</span><br><span class="line">      <span class="keyword">return</span> cached</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 调用 RDD 内部的 preferredLocations 方法去找最佳计算位置，实际上内部是看当前</span></span><br><span class="line">    <span class="comment">// RDD 是否 checkpoint 了，如果做了 checkpoint 就会返回 checkpoint 的位置</span></span><br><span class="line">    val rddPrefs = rdd.preferredLocations(rdd.partitions(partition)).toList</span><br><span class="line">    <span class="keyword">if</span> (rddPrefs.nonEmpty) &#123;</span><br><span class="line">      <span class="keyword">return</span> rddPrefs.map(TaskLocation(_))</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 如果该 RDD 既没有没缓存有没有 checkpoint 的话那么就会去遍历他的依赖链，发现是窄依赖的时候</span></span><br><span class="line"><span class="comment">    * 去就去递归调用 getPreferredLocsInternal 去看看该 RDD 是否被缓存或者 checkpoint 了。如果</span></span><br><span class="line"><span class="comment">    * 是，就返回缓存或者 checkpoint 的位置。如果一直没找到的话就返回 Nil</span></span><br><span class="line"><span class="comment">    **/</span></span><br><span class="line">    rdd.dependencies.foreach &#123;</span><br><span class="line">      <span class="keyword">case</span> n: NarrowDependency[_] =&gt;</span><br><span class="line">        <span class="keyword">for</span> (inPart &lt;- n.getParents(partition)) &#123;</span><br><span class="line">          val locs = getPreferredLocsInternal(n.rdd, inPart, visited)</span><br><span class="line">          <span class="keyword">if</span> (locs != Nil) &#123;</span><br><span class="line">            <span class="keyword">return</span> locs</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> _ =&gt;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Nil</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>当获取到 task 的最佳位置后，根据 stage 的类型匹配，为每个 partition 的数据创建一个 task，如果是 ShuffleMapStage 就创建 ShuffleMapTask，如果是 ResultStage 就创建 ResultTask。然后将整个 stage 创建的所有 task都放到一个 Seq 中。</p>
+<p>创建 task 的过程会将每个 task前面计算出来的最佳位置和 taskBinary 等参数带进去。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">val tasks: Seq[Task[_]] = <span class="keyword">try</span> &#123;</span><br><span class="line">      stage match &#123;</span><br><span class="line">        <span class="comment">// 如果是 ShuffleMapStage</span></span><br><span class="line">        <span class="keyword">case</span> stage: ShuffleMapStage =&gt;</span><br><span class="line">          partitionsToCompute.map &#123; id =&gt;</span><br><span class="line">            val locs = taskIdToLocations(id)</span><br><span class="line">            val part = stage.rdd.partitions(id)</span><br><span class="line">            <span class="comment">// 创建 ShuffleMapTask</span></span><br><span class="line">            <span class="keyword">new</span> ShuffleMapTask(stage.id, stage.latestInfo.attemptId,</span><br><span class="line">              taskBinary, part, locs, stage.latestInfo.taskMetrics, properties, Option(jobId),</span><br><span class="line">              Option(sc.applicationId), sc.applicationAttemptId)</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 如果是 ResultStage</span></span><br><span class="line">        <span class="keyword">case</span> stage: ResultStage =&gt;</span><br><span class="line">          partitionsToCompute.map &#123; id =&gt;</span><br><span class="line">            val p: Int = stage.partitions(id)</span><br><span class="line">            val part = stage.rdd.partitions(p)</span><br><span class="line">            val locs = taskIdToLocations(id)</span><br><span class="line">            <span class="comment">// 创建 ResultTask</span></span><br><span class="line">            <span class="keyword">new</span> ResultTask(stage.id, stage.latestInfo.attemptId,</span><br><span class="line">              taskBinary, part, locs, id, properties, stage.latestInfo.taskMetrics,</span><br><span class="line">              Option(jobId), Option(sc.applicationId), sc.applicationAttemptId)</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> &#123;</span><br><span class="line">      <span class="function"><span class="keyword">case</span> <span class="title">NonFatal</span><span class="params">(e)</span> </span>=&gt;</span><br><span class="line">        abortStage(stage, s<span class="string">"Task creation failed: $e\n$&#123;Utils.exceptionString(e)&#125;"</span>, Some(e))</span><br><span class="line">        runningStages -= stage</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>创建好该 stage 的 tasks 后，如果 tasks 的长度大于 0，会将这些 task 创建一个 TaskSet ，然后调用 TaskScheduler 的 submitTasks 方法，提交 TaskSet 给 TaskScheduler。</p>
+<p>如果 tasks 的长度小于等于 0 的话，会将当前 stage 标记完成，然后调用 submitWaitingChildStages 方法，提交当前 stage 的子 stage。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 如果 tasks 长度大于 0</span></span><br><span class="line"><span class="keyword">if</span> (tasks.size &gt; <span class="number">0</span>) &#123;</span><br><span class="line">      logInfo(<span class="string">"Submitting "</span> + tasks.size + <span class="string">" missing tasks from "</span> + stage + <span class="string">" ("</span> + stage.rdd + <span class="string">")"</span>)</span><br><span class="line">      stage.pendingPartitions ++= tasks.map(_.partitionId)</span><br><span class="line">      logDebug(<span class="string">"New pending partitions: "</span> + stage.pendingPartitions)</span><br><span class="line">      <span class="comment">// 将 tasks 封装到 TaskSet 内部，然后通过 taskScheduler 的 submitTasks 方法提交</span></span><br><span class="line">      taskScheduler.submitTasks(<span class="keyword">new</span> TaskSet(</span><br><span class="line">        tasks.toArray, stage.id, stage.latestInfo.attemptId, jobId, properties))</span><br><span class="line">      stage.latestInfo.submissionTime = Some(clock.getTimeMillis())</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;<span class="comment">// tasks 长度小于等于 0</span></span><br><span class="line">      <span class="comment">// Because we posted SparkListenerStageSubmitted earlier, we should mark</span></span><br><span class="line">      <span class="comment">// the stage as completed here in case there are no tasks to run</span></span><br><span class="line">  		<span class="comment">// 标记当前 stage 已完成</span></span><br><span class="line">      markStageAsFinished(stage, None)</span><br><span class="line"></span><br><span class="line">      val debugString = stage match &#123;</span><br><span class="line">        <span class="keyword">case</span> stage: ShuffleMapStage =&gt;</span><br><span class="line">          s<span class="string">"Stage $&#123;stage&#125; is actually done; "</span> +</span><br><span class="line">            s<span class="string">"(available: $&#123;stage.isAvailable&#125;,"</span> +</span><br><span class="line">            s<span class="string">"available outputs: $&#123;stage.numAvailableOutputs&#125;,"</span> +</span><br><span class="line">            s<span class="string">"partitions: $&#123;stage.numPartitions&#125;)"</span></span><br><span class="line">        <span class="keyword">case</span> stage : ResultStage =&gt;</span><br><span class="line">          s<span class="string">"Stage $&#123;stage&#125; is actually done; (partitions: $&#123;stage.numPartitions&#125;)"</span></span><br><span class="line">      &#125;</span><br><span class="line">      logDebug(debugString)</span><br><span class="line">			<span class="comment">// 提交当前 stage 的子 stage</span></span><br><span class="line">      submitWaitingChildStages(stage)</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>至此 Stage 的 TaskSet 已经提交给 TaskScheduler 了，下面就是看 TaskScheduler 怎么对 Task 进行调度处理了。</p>
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Spark/" rel="tag"># Spark</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/BigData/2019-07-03-Spark-源码分析（七）-DAGScheduler-源码分析1（stage-划分算法）.html" rel="next" title="Spark 源码分析（七）: DAGScheduler 源码分析1（stage 划分算法）">
+                <i class="fa fa-chevron-left"></i> Spark 源码分析（七）: DAGScheduler 源码分析1（stage 划分算法）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/BigData/2019-07-08-Spark-源码分析（九）-Task-启动.html" rel="prev" title="Spark 源码分析（九）: Task 启动">
+                Spark 源码分析（九）: Task 启动 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="http://stonezhu.top/avatar.jpg" alt="朱磊">
+            
+              <p class="site-author-name" itemprop="name">朱磊</p>
+              <p class="site-description motion-element" itemprop="description">stone</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">86</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">11</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">69</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/Zzz468005600" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://zhulei.blog.csdn.net" target="_blank" title="CSDN"><i class="fa fa-fw fa-globe"></i>CSDN</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://www.jianshu.com/u/9f869537b90e" target="_blank" title="简书"><i class="fa fa-fw fa-heartbeat"></i>简书</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://juejin.im/user/5b246031e51d4558d43fb44d/posts" target="_blank" title="掘金"><i class="fa fa-fw fa-spinner"></i>掘金</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://blog.luliangdev.cn" title="LuLiangDev" target="_blank">LuLiangDev</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">朱磊</span>
+
+  
+
+  
+</div>
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+  
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/reading_progress/reading_progress.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

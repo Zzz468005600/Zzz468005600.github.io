@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico?v=6.3.0">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+  <meta name="description" content="前面几篇文章已经说清楚了从 spark 任务提交到 driver 启动，然后执行 main 方法，初始化 SparkContext 对象。 在初始化 SparkContext 对象的过程中创建了两个重要组件： 一个是 TaskScheduler（实际上是他的实现类 TaskSchedulerImpl 对象），这个对象内部会持有一个 SchedulerBackend 对象，SchedulerBack">
+<meta name="keywords" content="Spark">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark 源码分析（七）: DAGScheduler 源码分析1（stage 划分算法）">
+<meta property="og:url" content="http://zhuleiblog.com/posts/BigData/2019-07-03-Spark-源码分析（七）-DAGScheduler-源码分析1（stage-划分算法）.html">
+<meta property="og:site_name" content="朱磊">
+<meta property="og:description" content="前面几篇文章已经说清楚了从 spark 任务提交到 driver 启动，然后执行 main 方法，初始化 SparkContext 对象。 在初始化 SparkContext 对象的过程中创建了两个重要组件： 一个是 TaskScheduler（实际上是他的实现类 TaskSchedulerImpl 对象），这个对象内部会持有一个 SchedulerBackend 对象，SchedulerBack">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-07-03T09:33:59.480Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spark 源码分析（七）: DAGScheduler 源码分析1（stage 划分算法）">
+<meta name="twitter:description" content="前面几篇文章已经说清楚了从 spark 任务提交到 driver 启动，然后执行 main 方法，初始化 SparkContext 对象。 在初始化 SparkContext 对象的过程中创建了两个重要组件： 一个是 TaskScheduler（实际上是他的实现类 TaskSchedulerImpl 对象），这个对象内部会持有一个 SchedulerBackend 对象，SchedulerBack">
+
+
+
+
+
+
+  <link rel="canonical" href="http://zhuleiblog.com/posts/BigData/2019-07-03-Spark-源码分析（七）-DAGScheduler-源码分析1（stage-划分算法）.html">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Spark 源码分析（七）: DAGScheduler 源码分析1（stage 划分算法） | 朱磊</title>
+  
+
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?084a44ac8106ee8c8af269853fa68cda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">朱磊</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">select * from life</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签<span class="badge">69</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类<span class="badge">11</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">86</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+    <div class="reading-progress-bar"></div>
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/BigData/2019-07-03-Spark-源码分析（七）-DAGScheduler-源码分析1（stage-划分算法）.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="朱磊">
+      <meta itemprop="description" content="stone">
+      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="朱磊">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Spark 源码分析（七）: DAGScheduler 源码分析1（stage 划分算法）
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-03 08:55:01" itemprop="dateCreated datePublished" datetime="2019-07-03T08:55:01+08:00">2019-07-03</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/BigData/" itemprop="url" rel="index"><span itemprop="name">BigData</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>前面几篇文章已经说清楚了从 spark 任务提交到 driver 启动，然后执行 main 方法，初始化 SparkContext 对象。</p>
+<p>在初始化 SparkContext 对象的过程中创建了两个重要组件：</p>
+<p>一个是 TaskScheduler（实际上是他的实现类 TaskSchedulerImpl 对象），这个对象内部会持有一个 SchedulerBackend 对象，SchedulerBackend 内部会又会持有一个 DriverEndpoint 对象（实际上就是一个 RpcEndpoint）。这样 TaskScheduler 就可以通过 SchedulerBackend 和集群资源管理器或者 Executor 对应 worker 节点进行通信做一些事情。比如向 master 节点去注册 application，master 在注册 application 的过程中会分配 worker 去启动 Executor，当 Executor 启动后又会和 TaskScheduler 进行注册。</p>
+<a id="more"></a>
+<p>另一个是 DAGScheduler，关于这个对象的创建过程前面没有详细讲，主要是因为 DAGScheduler 是在 SparkContext 初始化结束后，执行到 RDD 的 Action 操作的时候才会开始工作，下面就从 RDD 的 action 操作说起，看看 DAGScheduler 是怎么工作的。</p>
+<p>还是以 wordcount 程序为例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">val conf = <span class="keyword">new</span> SparkConf()</span><br><span class="line">    .setAppName(<span class="string">"WordCount"</span>)</span><br><span class="line">    .setMaster(<span class="string">"local"</span>)</span><br><span class="line">  val sc = <span class="keyword">new</span> SparkContext(conf)</span><br><span class="line">  val lines = sc.textFile(<span class="string">"./file/localfile"</span>)</span><br><span class="line">  val words = lines.flatMap(line =&gt; line.split(<span class="string">" "</span>))</span><br><span class="line">  val wordPairs = words.map(word =&gt; (word, <span class="number">1</span>))</span><br><span class="line">  val wordCounts = wordPairs.reduceByKey(_ + _)</span><br><span class="line">  wordCounts.foreach(wordCount =&gt; println(wordCount._1 + <span class="string">"  "</span> + wordCount._2))</span><br></pre></td></tr></table></figure>
+<p>当代码执行到 wordCounts.foreach 时候会调用到 RDD 的 foreach 方法，RDD 的 foreach 方法会去调用 SparkContext 的 runjob 方法。</p>
+<p>SparkContext 中会有多个 runjob 方法，最后都会走到一个 runjob 那里去，这个 runjob 方法最终会调用 DAGScheduler 的 runJob 的方法，具体可以先看下这个 SparkContext 的 runjob 方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">def runJob[T, U: ClassTag](</span><br><span class="line">      rdd: RDD[T],</span><br><span class="line">      func: (TaskContext, Iterator[T]) =&gt; U,</span><br><span class="line">      partitions: Seq[Int],</span><br><span class="line">      resultHandler: (Int, U) =&gt; Unit): Unit = &#123;</span><br><span class="line">    <span class="keyword">if</span> (stopped.get()) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"SparkContext has been shutdown"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    val callSite = getCallSite</span><br><span class="line">    val cleanedFunc = clean(func)</span><br><span class="line">    logInfo(<span class="string">"Starting job: "</span> + callSite.shortForm)</span><br><span class="line">    <span class="keyword">if</span> (conf.getBoolean(<span class="string">"spark.logLineage"</span>, <span class="keyword">false</span>)) &#123;</span><br><span class="line">      logInfo(<span class="string">"RDD's recursive dependencies:\n"</span> + rdd.toDebugString)</span><br><span class="line">    &#125;</span><br><span class="line">  	<span class="comment">// 去调用 DAGScheduler 的 runjob 方法</span></span><br><span class="line">    dagScheduler.runJob(rdd, cleanedFunc, partitions, callSite, resultHandler, localProperties.get)</span><br><span class="line">    progressBar.foreach(_.finishAll())</span><br><span class="line">    rdd.doCheckpoint()</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>最主要的还是 DAGScheduler 中的 runjob 方法。</p>
+<p>这个 runjob 方法内部实际上调用了 submitJob 方法，用于提交 job。该方法返回一个 JobWaiter，用于等待 DAGScheduler 任务的完成。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">def runJob[T, U](</span><br><span class="line">      rdd: RDD[T],</span><br><span class="line">      func: (TaskContext, Iterator[T]) =&gt; U,</span><br><span class="line">      partitions: Seq[Int],</span><br><span class="line">      callSite: CallSite,</span><br><span class="line">      resultHandler: (Int, U) =&gt; Unit,</span><br><span class="line">      properties: Properties): Unit = &#123;</span><br><span class="line">    val start = System.nanoTime</span><br><span class="line">    <span class="comment">// 调用 submitJob 方法</span></span><br><span class="line">    val waiter = submitJob(rdd, func, partitions, callSite, resultHandler, properties)</span><br></pre></td></tr></table></figure>
+<p>submitJob 方法是调用 eventProcessLoop 的 post 方法将 JobSubmitted 事件添加到 DAGScheduler 的事件队列中去。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">eventProcessLoop.post(JobSubmitted(</span><br><span class="line">      jobId, rdd, func2, partitions.toArray, callSite, waiter,</span><br><span class="line">      SerializationUtils.clone(properties)))</span><br></pre></td></tr></table></figure>
+<p>这里的 eventProcessLoop 是 DAGSchedulerEventProcessLoop 对象，在 DAGScheduler 的初始化代码中可以看到。DAGSchedulerEventProcessLoop 实际上内部有一个线程，用来处理事件队列。</p>
+<p>事件队列的处理最后会走到 DAGSchedulerEventProcessLoop 的 onReceive 的回调方法里面去。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">   * The main event loop of the DAG scheduler.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function">override def <span class="title">onReceive</span><span class="params">(event: DAGSchedulerEvent)</span>: Unit </span>= &#123;</span><br><span class="line">    val timerContext = timer.time()</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="comment">// 调用 doOnReceive 方法</span></span><br><span class="line">      doOnReceive(event)</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">      timerContext.stop()</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>后面会去调用 doOnReceive 方法，根据 event 进行模式匹配，匹配到 JobSubmitted 的 event 后实际上是去调用 DAGScheduler 的 handleJobSubmitted 这个方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> def <span class="title">doOnReceive</span><span class="params">(event: DAGSchedulerEvent)</span>: Unit </span>= event match &#123;</span><br><span class="line">  	<span class="comment">// 模式匹配</span></span><br><span class="line">    <span class="function"><span class="keyword">case</span> <span class="title">JobSubmitted</span><span class="params">(jobId, rdd, func, partitions, callSite, listener, properties)</span> </span>=&gt;</span><br><span class="line">      <span class="comment">// 调用 handleJobSubmitted 方法</span></span><br><span class="line">      dagScheduler.handleJobSubmitted(jobId, rdd, func, partitions, callSite, listener, properties)</span><br></pre></td></tr></table></figure>
+<p>下面来看 handleJobSubmitted 这个方法做了哪些操作：</p>
+<p>1，使用触发 job 的最后一个 rdd，创建 finalStage；</p>
+<p><strong>注：</strong> Stage 是一个抽象类，一共有两个实现，一个是 ResultStage，是用 action 中的函数计算结果的 stage；另一个是 ShuffleMapStage，是为 shuffle 准备数据的 stage。</p>
+<p>2，构造一个 Job 对象，将上面创建的 finalStage 封装进去，这个 Job 的最后一个 stage 也就是这个 finalStage；</p>
+<p>3，将 Job 的相关信息保存到内存的数据结构中；</p>
+<p>4，调用 submitStage 方法提交 finalStage。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span>[scheduler] <span class="function">def <span class="title">handleJobSubmitted</span><span class="params">(jobId: Int,</span></span></span><br><span class="line"><span class="function"><span class="params">      finalRDD: RDD[_],</span></span></span><br><span class="line"><span class="function"><span class="params">      func: (TaskContext, Iterator[_])</span> </span>=&gt; _,</span><br><span class="line">      partitions: Array[Int],</span><br><span class="line">      callSite: CallSite,</span><br><span class="line">      listener: JobListener,</span><br><span class="line">      properties: Properties) &#123;</span><br><span class="line">    <span class="keyword">var</span> finalStage: ResultStage = <span class="keyword">null</span></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="comment">// 使用触发 job 的最后一个 RDD 创建一个 ResultStage</span></span><br><span class="line">      finalStage = createResultStage(finalRDD, func, partitions, jobId, callSite)</span><br><span class="line">    &#125; <span class="keyword">catch</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> e: Exception =&gt;</span><br><span class="line">        logWarning(<span class="string">"Creating new stage failed due to exception - job: "</span> + jobId, e)</span><br><span class="line">        listener.jobFailed(e)</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  	<span class="comment">// 使用前面创建好的 ResultStage 去创建一个 job</span></span><br><span class="line">  	<span class="comment">// 这个 job 的最后一个 stage 就是 finalStage</span></span><br><span class="line">    val job = <span class="keyword">new</span> ActiveJob(jobId, finalStage, callSite, listener, properties)</span><br><span class="line">    clearCacheLocs()</span><br><span class="line">    logInfo(<span class="string">"Got job %s (%s) with %d output partitions"</span>.format(</span><br><span class="line">      job.jobId, callSite.shortForm, partitions.length))</span><br><span class="line">    logInfo(<span class="string">"Final stage: "</span> + finalStage + <span class="string">" ("</span> + finalStage.name + <span class="string">")"</span>)</span><br><span class="line">    logInfo(<span class="string">"Parents of final stage: "</span> + finalStage.parents)</span><br><span class="line">    logInfo(<span class="string">"Missing parents: "</span> + getMissingParentStages(finalStage))</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将 job 的相关信息存储到内存中</span></span><br><span class="line">    val jobSubmissionTime = clock.getTimeMillis()</span><br><span class="line">    jobIdToActiveJob(jobId) = job</span><br><span class="line">    activeJobs += job</span><br><span class="line">    finalStage.setActiveJob(job)</span><br><span class="line">    val stageIds = jobIdToStageIds(jobId).toArray</span><br><span class="line">    val stageInfos = stageIds.flatMap(id =&gt; stageIdToStage.get(id).map(_.latestInfo))</span><br><span class="line">    listenerBus.post(</span><br><span class="line">      SparkListenerJobStart(job.jobId, jobSubmissionTime, stageInfos, properties))</span><br><span class="line">    <span class="comment">// 提交 finalStage</span></span><br><span class="line">    submitStage(finalStage)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>下面就会走进 submitStage 方法，这个方法是用来提交 stage 的，具体做了这些操作：</p>
+<p>1，首先会验证 stage 对应的 job id 进行校验，存在才会继续执行；</p>
+<p>2，在提交这个 stage 之前会判断当前 stage 的状态。</p>
+<p>如果是 running、waiting、failed 的话就不做任何操作。</p>
+<p>如果不是这三个状态则会根据当前 stage 去往前推前面的 stage，如果能找到前面的 stage 则继续递归调用 submitStage 方法，直到当前 stage 找不到前面的 stage 为止，这时候的 stage 就相当于当前 job 的第一个 stage，然后回去调用 submitMissingTasks 方法去分配 task。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> def <span class="title">submitStage</span><span class="params">(stage: Stage)</span> </span>&#123;</span><br><span class="line">    val jobId = activeJobForStage(stage)</span><br><span class="line">    <span class="comment">// 看看当前的 job 是否存在</span></span><br><span class="line">    <span class="keyword">if</span> (jobId.isDefined) &#123;</span><br><span class="line">      logDebug(<span class="string">"submitStage("</span> + stage + <span class="string">")"</span>)</span><br><span class="line">       <span class="comment">// 判断当前 stage 的状态</span></span><br><span class="line">      <span class="keyword">if</span> (!waitingStages(stage) &amp;&amp; !runningStages(stage) &amp;&amp; !failedStages(stage)) &#123;</span><br><span class="line">        <span class="comment">// 根据当前的 stage 去推倒前面的 stage</span></span><br><span class="line">        val missing = getMissingParentStages(stage).sortBy(_.id)</span><br><span class="line">        logDebug(<span class="string">"missing: "</span> + missing)</span><br><span class="line">        <span class="comment">// 如果前面已经没有 stage 了，那么久将当前 stage 去执行 submitMissingTasks 方法</span></span><br><span class="line">        <span class="comment">// 如果前面还有 stage 的话那么递归调用 submitStage</span></span><br><span class="line">        <span class="keyword">if</span> (missing.isEmpty) &#123;</span><br><span class="line">          logInfo(<span class="string">"Submitting "</span> + stage + <span class="string">" ("</span> + stage.rdd + <span class="string">"), which has no missing parents"</span>)</span><br><span class="line">          submitMissingTasks(stage, jobId.get)</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="keyword">for</span> (parent &lt;- missing) &#123;</span><br><span class="line">            submitStage(parent)</span><br><span class="line">          &#125;</span><br><span class="line">          <span class="comment">// 将当前 stage 加入等待队列</span></span><br><span class="line">          waitingStages += stage</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">// abortStage 终止提交当前 stage</span></span><br><span class="line">      abortStage(stage, <span class="string">"No active job for stage "</span> + stage.id, None)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>上面最重要的一个地方就是使用当前 stage 向前推，找到前面的 stage，也是 stage 的划分算法。下面就看看 getMissingParentStages 这个划分算法做了哪些操作：</p>
+<p>1，创建 missing 和 visited 两个 HashSet，分别用来存储根据当前 stage 向前找到的所有 stage 数据和已经调用过 visit 方法的 RDD；</p>
+<p>2，创建一个存放 RDD 的栈，然后将传进来的 stage 中的 rdd 也就是 finalStage 中的那个 job 触发的最后一个 RDD 放入栈中；</p>
+<p>3，然后将栈中的 RDD 拿出来调用 visit 方法，这个 visit 方法内部会根据当前 RDD 的依赖链逐个遍历所有 RDD，并且会根据相邻两个 RDD 的依赖关系来决定下面的操作：</p>
+<p>如果是宽依赖，即 ShuffleDependency ，那么会调用 getOrCreateShuffleMapStage 创建一个新的 stage，默认每个 job 的最后一个 stage 是 ResultStage，剩余的 job 中的其它 stage 均为 ShuffleMapStage。然后会将创建的这个 stage 加入前面创建的 missing 的 HashSet 中；</p>
+<p>如果是窄依赖，即 NarrowDependency，那么会将该 RDD 加入到前面创建的 RDD 栈中，继续遍历调用 visit 方法。</p>
+<p>直到所有的 RDD 都遍历结束后返回前面创建的 missing 的集合。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> def <span class="title">getMissingParentStages</span><span class="params">(stage: Stage)</span>: List[Stage] </span>= &#123;</span><br><span class="line">  	<span class="comment">// 存放下面找到的所有 stage</span></span><br><span class="line">    val missing = <span class="keyword">new</span> HashSet[Stage]</span><br><span class="line">    <span class="comment">// 存放已经遍历过的 rdd</span></span><br><span class="line">    val visited = <span class="keyword">new</span> HashSet[RDD[_]]</span><br><span class="line">    <span class="comment">// We are manually maintaining a stack here to prevent StackOverflowError</span></span><br><span class="line">    <span class="comment">// caused by recursively visiting</span></span><br><span class="line">    <span class="comment">// 创建一个维护 RDD 的栈</span></span><br><span class="line">    val waitingForVisit = <span class="keyword">new</span> Stack[RDD[_]]</span><br><span class="line">    <span class="comment">// visit 方法</span></span><br><span class="line">    <span class="function">def <span class="title">visit</span><span class="params">(rdd: RDD[_])</span> </span>&#123;</span><br><span class="line">      <span class="comment">// 判断当前 rdd 是否 visit 过</span></span><br><span class="line">      <span class="keyword">if</span> (!visited(rdd)) &#123;</span><br><span class="line">        visited += rdd</span><br><span class="line">        val rddHasUncachedPartitions = getCacheLocs(rdd).contains(Nil)</span><br><span class="line">        <span class="keyword">if</span> (rddHasUncachedPartitions) &#123;</span><br><span class="line">          <span class="comment">// 遍历当前 RDD 的依赖链</span></span><br><span class="line">          <span class="keyword">for</span> (dep &lt;- rdd.dependencies) &#123;</span><br><span class="line">            dep match &#123;</span><br><span class="line">              <span class="comment">// 如果是宽依赖</span></span><br><span class="line">              <span class="keyword">case</span> shufDep: ShuffleDependency[_, _, _] =&gt;</span><br><span class="line">                <span class="comment">// 创建 ShuffleMapStage </span></span><br><span class="line">                val mapStage = getOrCreateShuffleMapStage(shufDep, stage.firstJobId)</span><br><span class="line">                <span class="keyword">if</span> (!mapStage.isAvailable) &#123;</span><br><span class="line">                  <span class="comment">// 加入 missing 集合</span></span><br><span class="line">                  missing += mapStage</span><br><span class="line">                &#125;</span><br><span class="line">              <span class="comment">// 如果是窄依赖</span></span><br><span class="line">              <span class="keyword">case</span> narrowDep: NarrowDependency[_] =&gt;</span><br><span class="line">                <span class="comment">// 加入等待 visit 的集合中，准备下一次遍历</span></span><br><span class="line">                waitingForVisit.push(narrowDep.rdd)</span><br><span class="line">            &#125;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  	<span class="comment">// 将传入的 stage 中的 rdd 拿出来压入 waitingForVisit 的栈中</span></span><br><span class="line">    waitingForVisit.push(stage.rdd)</span><br><span class="line">    <span class="comment">// 遍历栈里的所有 RDD </span></span><br><span class="line">    <span class="keyword">while</span> (waitingForVisit.nonEmpty) &#123;</span><br><span class="line">      <span class="comment">// 调用 visit 方法</span></span><br><span class="line">      visit(waitingForVisit.pop())</span><br><span class="line">    &#125;</span><br><span class="line">  	<span class="comment">// 返回 missing 这个 stage 集合</span></span><br><span class="line">    missing.toList</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>至此，所有的 stage 都已经划分结束了。可以看出每个 Spark Application 执行代码的时候，每当碰到一个 Action 操作就会划分出一个 Job，然后每个 Job 里会根据宽窄依赖去划分出多个 stage。</p>
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Spark/" rel="tag"># Spark</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/BigData/2019-07-02-Spark-源码解析（六）-向-driver-注册-Executor.html" rel="next" title="Spark 源码分析（六）: 向 driver 注册 Executor">
+                <i class="fa fa-chevron-left"></i> Spark 源码分析（六）: 向 driver 注册 Executor
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/BigData/2019-07-03-Spark-源码分析（八）-DAGScheduler-源码分析2（task-最佳位置计算）.html" rel="prev" title="Spark 源码分析（八）:DAGScheduler 源码分析2（task 最佳位置计算）">
+                Spark 源码分析（八）:DAGScheduler 源码分析2（task 最佳位置计算） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="http://stonezhu.top/avatar.jpg" alt="朱磊">
+            
+              <p class="site-author-name" itemprop="name">朱磊</p>
+              <p class="site-description motion-element" itemprop="description">stone</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">86</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">11</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">69</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/Zzz468005600" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://zhulei.blog.csdn.net" target="_blank" title="CSDN"><i class="fa fa-fw fa-globe"></i>CSDN</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://www.jianshu.com/u/9f869537b90e" target="_blank" title="简书"><i class="fa fa-fw fa-heartbeat"></i>简书</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://juejin.im/user/5b246031e51d4558d43fb44d/posts" target="_blank" title="掘金"><i class="fa fa-fw fa-spinner"></i>掘金</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://blog.luliangdev.cn" title="LuLiangDev" target="_blank">LuLiangDev</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">朱磊</span>
+
+  
+
+  
+</div>
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+  
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/reading_progress/reading_progress.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

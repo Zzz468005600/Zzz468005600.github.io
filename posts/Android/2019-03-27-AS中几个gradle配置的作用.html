@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico?v=6.3.0">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+  <meta name="description" content="一个使用 Gradle 构建的 Android 项目中一般会涉及到三个 Gradle 相关的东西，分别是： 1，Gradle：是一个基于 Apache Ant 和 Apache Maven 概念的项目 自动化建构 工具。它使用一种基于 Groovy 的特定领域语言 来声明项目设置，而不是传统的 XML 。当前其支持的语言限于 Java 、 Groovy 和 Scala ，计划未来将支持更多的语言。">
+<meta name="keywords" content="Android Studio,Gradle">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AS 中几个 Gradle 配置的作用">
+<meta property="og:url" content="http://zhuleiblog.com/posts/Android/2019-03-27-AS中几个gradle配置的作用.html">
+<meta property="og:site_name" content="朱磊">
+<meta property="og:description" content="一个使用 Gradle 构建的 Android 项目中一般会涉及到三个 Gradle 相关的东西，分别是： 1，Gradle：是一个基于 Apache Ant 和 Apache Maven 概念的项目 自动化建构 工具。它使用一种基于 Groovy 的特定领域语言 来声明项目设置，而不是传统的 XML 。当前其支持的语言限于 Java 、 Groovy 和 Scala ，计划未来将支持更多的语言。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-03-28T07:39:46.290Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="AS 中几个 Gradle 配置的作用">
+<meta name="twitter:description" content="一个使用 Gradle 构建的 Android 项目中一般会涉及到三个 Gradle 相关的东西，分别是： 1，Gradle：是一个基于 Apache Ant 和 Apache Maven 概念的项目 自动化建构 工具。它使用一种基于 Groovy 的特定领域语言 来声明项目设置，而不是传统的 XML 。当前其支持的语言限于 Java 、 Groovy 和 Scala ，计划未来将支持更多的语言。">
+
+
+
+
+
+
+  <link rel="canonical" href="http://zhuleiblog.com/posts/Android/2019-03-27-AS中几个gradle配置的作用.html">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>AS 中几个 Gradle 配置的作用 | 朱磊</title>
+  
+
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?084a44ac8106ee8c8af269853fa68cda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">朱磊</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">select * from life</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签<span class="badge">69</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类<span class="badge">11</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">86</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+    <div class="reading-progress-bar"></div>
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/Android/2019-03-27-AS中几个gradle配置的作用.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="朱磊">
+      <meta itemprop="description" content="stone">
+      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="朱磊">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">AS 中几个 Gradle 配置的作用
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-03-27 13:04:03" itemprop="dateCreated datePublished" datetime="2019-03-27T13:04:03+08:00">2019-03-27</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>一个使用 Gradle 构建的 Android 项目中一般会涉及到三个 Gradle 相关的东西，分别是：</p>
+<p>1，Gradle：是一个基于 <a href="https://link.zhihu.com/?target=http%3A//zh.wikipedia.org/wiki/Apache_Ant" target="_blank" rel="noopener">Apache Ant</a> 和 <a href="https://link.zhihu.com/?target=http%3A//zh.wikipedia.org/wiki/Apache_Maven" target="_blank" rel="noopener">Apache Maven</a> 概念的项目 <a href="https://link.zhihu.com/?target=http%3A//zh.wikipedia.org/wiki/%25E8%2587%25AA%25E5%258B%2595%25E5%258C%2596%25E5%25BB%25BA%25E6%25A7%258B" target="_blank" rel="noopener">自动化建构</a> 工具。它使用一种基于 <a href="https://link.zhihu.com/?target=http%3A//zh.wikipedia.org/wiki/Groovy" target="_blank" rel="noopener">Groovy</a> 的<a href="https://link.zhihu.com/?target=http%3A//zh.wikipedia.org/w/index.php%3Ftitle%3D%25E7%2589%25B9%25E5%25AE%259A%25E9%25A2%2586%25E5%259F%259F%25E8%25AF%25AD%25E8%25A8%2580%26action%3Dedit%26redlink%3D1" target="_blank" rel="noopener">特定领域语言</a> 来声明项目设置，而不是传统的 <a href="https://link.zhihu.com/?target=http%3A//zh.wikipedia.org/wiki/XML" target="_blank" rel="noopener">XML</a> 。当前其支持的语言限于 <a href="https://link.zhihu.com/?target=http%3A//zh.wikipedia.org/wiki/Java" target="_blank" rel="noopener">Java</a> 、 <a href="https://link.zhihu.com/?target=http%3A//zh.wikipedia.org/wiki/Groovy" target="_blank" rel="noopener">Groovy</a> 和 <a href="https://link.zhihu.com/?target=http%3A//zh.wikipedia.org/wiki/Scala" target="_blank" rel="noopener">Scala</a> ，计划未来将支持更多的语言。</p>
+<p>2，Gradle Wrapper：Gradle 可以在没有安装 Gradle 的情况下使用，这时候就需要 Gradle Wrapper 了。Gradle Wrapper 其实就是一个脚本文件，它会在没有安装 Gradle 的情况下为我们下载 Gradle，之后我们就可以使用 <strong>gradlew</strong> 命令，像使用 gradle 一样来使用 Gradle 了。</p>
+<p>3，Android Gradle Plugin：是一堆适合 Android 开发的 Gradle 插件的集合，主要由 Google 的 Android 团队开发，Gradle 不是 Android 的专属构建系统，但是有了Android Plugin for Gradle 的话，你会发现使用 Gradle 构建 Android 项目尤其的简单。</p>
+<p>三者的官网如下：</p>
+<ul>
+<li>Gradle: <a href="https://docs.gradle.org/current/userguide/userguide_single.html" target="_blank" rel="noopener">https://docs.gradle.org/current/userguide/userguide_single.html</a></li>
+<li>Gradle Wrapper: <a href="https://docs.gradle.org/current/userguide/gradle_wrapper.html" target="_blank" rel="noopener">https://docs.gradle.org/current/userguide/gradle_wrapper.html</a></li>
+<li>Android Plugin for Gradle: <a href="https://developer.android.com/studio/build/index.html" target="_blank" rel="noopener">https://developer.android.com/studio/build/index.html</a></li>
+</ul>
+<a id="more"></a>
+<h3 id="Gradle-Wrapper"><a href="#Gradle-Wrapper" class="headerlink" title="Gradle Wrapper"></a>Gradle Wrapper</h3><p>1，<code>gradle/wrapper/gradle-wrapper.jar</code> Gradle Wrapper的主体功能包；</p>
+<p>2，<code>gradle/wrapper/gradle-wrapper.properties</code> Wrapper 属性文件，文件主要指定了该项目需要什么版本的 Gradle，从哪里下载该版本的 Gradle，下载下来放到哪里：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span>Tue Feb 19 10:23:45 CST 2019</span><br><span class="line">distributionBase=GRADLE_USER_HOME // 指这个路径 -&gt; ~/.gradle</span><br><span class="line">distributionPath=wrapper/dists // distributionBase和distributionPath组合在一起，是解压 gradle 压缩包之后的文件存放目录</span><br><span class="line">zipStoreBase=GRADLE_USER_HOME</span><br><span class="line">zipStorePath=wrapper/dists // zipStoreBase 和 zipStorePath 组合在一起，是下载 gradle 压缩包的存放目录</span><br><span class="line">distributionUrl=https\:// services.gradle.org/distributions/gradle-4.10.1-all.zip //是要下载的gradle的地址，使用哪个版本的gradle</span><br></pre></td></tr></table></figure>
+<p>3，<code>gradlew</code> Unix的shell 脚本；</p>
+<p>4，<code>gradlew.bat</code> Windows 的批处理文件；</p>
+<h3 id="Android-Gradle-Plugin"><a href="#Android-Gradle-Plugin" class="headerlink" title="Android Gradle Plugin"></a>Android Gradle Plugin</h3><p>这个配置在项目根目录下的 <code>build.gradle</code> 中：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">buildscript &#123;</span><br><span class="line">    repositories &#123;</span><br><span class="line">        maven &#123; url "https://maven.aliyun.com/repository/google"&#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    dependencies &#123;</span><br><span class="line">        classpath 'com.android.tools.build:gradle:3.3.2'</span><br><span class="line"></span><br><span class="line">        // NOTE: Do not place your application dependencies here; they belong</span><br><span class="line">        // in the individual module build.gradle files</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里配置的 <code>repositories</code> 和 <code>dependencies</code> 都是用于 gradlew 的脚本文件中的，和 <code>allprojects</code> 下面配置的 <code>respositories</code> 用处不一样，后者是用于整个项目的仓库。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">allprojects &#123;//用于整个项目的仓库</span><br><span class="line">    repositories &#123;</span><br><span class="line">        google()</span><br><span class="line">        jcenter()</span><br><span class="line">        maven &#123; url "https://jitpack.io" &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>由于墙的原因，国外的仓库拉东西特别慢，要想体验好点可以用国内的<a href="https://help.aliyun.com/document_detail/102512.html?spm=a2c40.aliyun_maven_repo.0.0.36183054nqlhd6" target="_blank" rel="noopener">阿里云镜像</a>。</p>
+<p><strong>附 gradlew 的一些常用指令：</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">gradlew -v //版本号</span><br><span class="line">gradlew clean //清除工程目录下的build文件夹</span><br><span class="line">gradlew build //检查依赖并编译打包(debug、release环境的包都打出来)</span><br><span class="line">gradlew assembleDebug //编译并打Debug包</span><br><span class="line">gradlew assembleRelease //编译并打Release的包</span><br><span class="line">gradlew assembleBaiduRelease //编译并打Release的百度包(如果有渠道的话)</span><br><span class="line">gradlew installRelease Release //模式打包并安装</span><br><span class="line">gradlew uninstallRelease //卸载Release模式包</span><br></pre></td></tr></table></figure>
+<p>参考：</p>
+<p>1，<a href="https://blog.csdn.net/u011054333/article/details/53999590" target="_blank" rel="noopener">https://blog.csdn.net/u011054333/article/details/53999590</a></p>
+<p>2，<a href="https://blog.csdn.net/u013553529/article/details/55011602" target="_blank" rel="noopener">https://blog.csdn.net/u013553529/article/details/55011602</a></p>
+<p>3，<a href="https://www.cnblogs.com/jiangxinnju/p/8229129.html" target="_blank" rel="noopener">https://www.cnblogs.com/jiangxinnju/p/8229129.html</a></p>
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android-Studio/" rel="tag"># Android Studio</a>
+          
+            <a href="/tags/Gradle/" rel="tag"># Gradle</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/Tools/2019-03-17-理解ssh连接过程.html" rel="next" title="理解 ssh 连接过程">
+                <i class="fa fa-chevron-left"></i> 理解 ssh 连接过程
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/BigData/2019-03-28-开窗函数.html" rel="prev" title="开窗函数">
+                开窗函数 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="http://stonezhu.top/avatar.jpg" alt="朱磊">
+            
+              <p class="site-author-name" itemprop="name">朱磊</p>
+              <p class="site-description motion-element" itemprop="description">stone</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">86</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">11</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">69</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/Zzz468005600" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://zhulei.blog.csdn.net" target="_blank" title="CSDN"><i class="fa fa-fw fa-globe"></i>CSDN</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://www.jianshu.com/u/9f869537b90e" target="_blank" title="简书"><i class="fa fa-fw fa-heartbeat"></i>简书</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://juejin.im/user/5b246031e51d4558d43fb44d/posts" target="_blank" title="掘金"><i class="fa fa-fw fa-spinner"></i>掘金</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://blog.luliangdev.cn" title="LuLiangDev" target="_blank">LuLiangDev</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Gradle-Wrapper"><span class="nav-text">Gradle Wrapper</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Android-Gradle-Plugin"><span class="nav-text">Android Gradle Plugin</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">朱磊</span>
+
+  
+
+  
+</div>
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+  
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/reading_progress/reading_progress.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

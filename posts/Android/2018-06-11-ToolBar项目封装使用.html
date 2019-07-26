@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico?v=6.3.0">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+  <meta name="description" content="继承关系1234java.lang.Object   ↳	android.view.View 	   ↳	android.view.ViewGroup 	 	   ↳	android.widget.Toolbar 其实toolbar就是一个封装好的ViewGroup，其主要五大部分对应的子View如下：12345678910//菜单，ActionMenuView也是个ViewGroupprivat">
+<meta name="keywords" content="Android,ToolBar">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ToolBar项目封装使用">
+<meta property="og:url" content="http://zhuleiblog.com/posts/Android/2018-06-11-ToolBar项目封装使用.html">
+<meta property="og:site_name" content="朱磊">
+<meta property="og:description" content="继承关系1234java.lang.Object   ↳	android.view.View 	   ↳	android.view.ViewGroup 	 	   ↳	android.widget.Toolbar 其实toolbar就是一个封装好的ViewGroup，其主要五大部分对应的子View如下：12345678910//菜单，ActionMenuView也是个ViewGroupprivat">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://pa8r6emo8.bkt.clouddn.com/blog/toolbar%E5%B8%83%E5%B1%80.jpg">
+<meta property="og:image" content="http://pa8r6emo8.bkt.clouddn.com/blog/theme%E4%B8%AD%E7%9A%84%E9%A2%9C%E8%89%B2.jpg">
+<meta property="og:updated_time" content="2018-07-11T09:12:07.470Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ToolBar项目封装使用">
+<meta name="twitter:description" content="继承关系1234java.lang.Object   ↳	android.view.View 	   ↳	android.view.ViewGroup 	 	   ↳	android.widget.Toolbar 其实toolbar就是一个封装好的ViewGroup，其主要五大部分对应的子View如下：12345678910//菜单，ActionMenuView也是个ViewGroupprivat">
+<meta name="twitter:image" content="http://pa8r6emo8.bkt.clouddn.com/blog/toolbar%E5%B8%83%E5%B1%80.jpg">
+
+
+
+
+
+
+  <link rel="canonical" href="http://zhuleiblog.com/posts/Android/2018-06-11-ToolBar项目封装使用.html">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>ToolBar项目封装使用 | 朱磊</title>
+  
+
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?084a44ac8106ee8c8af269853fa68cda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">朱磊</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">select * from life</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签<span class="badge">69</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类<span class="badge">11</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">86</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+    <div class="reading-progress-bar"></div>
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/Android/2018-06-11-ToolBar项目封装使用.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="朱磊">
+      <meta itemprop="description" content="stone">
+      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="朱磊">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">ToolBar项目封装使用
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2018-06-11 11:44:25" itemprop="dateCreated datePublished" datetime="2018-06-11T11:44:25+08:00">2018-06-11</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="继承关系"><a href="#继承关系" class="headerlink" title="继承关系"></a>继承关系</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">java.lang.Object</span><br><span class="line">   ↳	android.view.View</span><br><span class="line"> 	   ↳	android.view.ViewGroup</span><br><span class="line"> 	 	   ↳	android.widget.Toolbar</span><br></pre></td></tr></table></figure>
+<p>其实toolbar就是一个封装好的ViewGroup，其主要五大部分对应的子View如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//菜单，ActionMenuView也是个ViewGroup</span></span><br><span class="line"><span class="keyword">private</span> ActionMenuView mMenuView;</span><br><span class="line"><span class="comment">//主标题</span></span><br><span class="line"><span class="keyword">private</span> TextView mTitleTextView;</span><br><span class="line"><span class="comment">//副标题</span></span><br><span class="line"><span class="keyword">private</span> TextView mSubtitleTextView;</span><br><span class="line"><span class="comment">//导航按钮</span></span><br><span class="line"><span class="keyword">private</span> ImageButton mNavButtonView;</span><br><span class="line"><span class="comment">//Logo图标</span></span><br><span class="line"><span class="keyword">private</span> ImageView mLogoView;</span><br></pre></td></tr></table></figure></p>
+<a id="more"></a>
+<p>看下图，比较清晰：</p>
+<p><img src="http://pa8r6emo8.bkt.clouddn.com/blog/toolbar%E5%B8%83%E5%B1%80.jpg" alt="ToolBar图解"></p>
+<h2 id="项目封装"><a href="#项目封装" class="headerlink" title="项目封装"></a>项目封装</h2><h3 id="配置theme"><a href="#配置theme" class="headerlink" title="配置theme"></a>配置theme</h3><blockquote>
+<p> 为了适配5.0之后安卓的设计，做起statusbar的颜色适配</p>
+</blockquote>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&lt;style name=<span class="string">"AppTheme"</span> parent=<span class="string">"Theme.AppCompat.Light.Theme.AppCompat.Light.NoActionBar"</span>&gt;</span><br><span class="line">        &lt;item name="colorPrimaryDark"&gt;@color/main_dark&lt;/item&gt;</span><br><span class="line">        &lt;item name="colorPrimary"&gt;@color/main&lt;/item&gt;</span><br><span class="line">        &lt;item name="colorAccent"&gt;@color/strong&lt;/item&gt;</span><br><span class="line">        &lt;item name="android:textColorPrimary"&gt;@android:color/white&lt;/item&gt;</span><br><span class="line">        &lt;item name="android:actionBarSize"&gt;@dimen/nav_bar_height&lt;/item&gt;</span><br><span class="line">    &lt;/style&gt;</span><br></pre></td></tr></table></figure>
+<p>这里注意下，主题使用的parent是<code>Theme.AppCompat.Light.NoActionBar</code>，当然有些项目中配全局Theme时候还是用的<code>Theme.AppCompat.Light.DarkActionBar</code>，这时候需要改成没有ActionBar的主题，这里可以直接改成<code>Theme.AppCompat.Light.NoActionBar</code>，但是有些项目里如果想有些地方使用Actionbar有些地方使用Toolbar（当然很少。。）可以这样配一下即可：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;style name=<span class="string">"AppTheme.NoActionBar"</span>&gt;</span><br><span class="line">        &lt;item name="windowActionBar"&gt;false&lt;/item&gt;</span><br><span class="line">        &lt;item name="windowNoTitle"&gt;true&lt;/item&gt;</span><br><span class="line">&lt;/style&gt;</span><br></pre></td></tr></table></figure>
+<p>然后在需要使用Toolbar的activity里给他配上这样的theme即可：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&lt;activity</span><br><span class="line">        android:name=<span class="string">".ui.activity.MainTabBarActivity"</span></span><br><span class="line">        android:label=<span class="string">"@string/app_name"</span></span><br><span class="line">        android:screenOrientation=<span class="string">"portrait"</span></span><br><span class="line">        android:launchMode=<span class="string">"singleTask"</span></span><br><span class="line">        android:theme=<span class="string">"@style/AppTheme.NoActionBar"</span></span><br><span class="line">        android:windowSoftInputMode=<span class="string">"stateHidden"</span>&gt;</span><br><span class="line">&lt;/activity&gt;</span><br></pre></td></tr></table></figure>
+<p><strong>关于theme中几个color字段的描述看谷歌官方图，如下：</strong></p>
+<p><img src="http://pa8r6emo8.bkt.clouddn.com/blog/theme%E4%B8%AD%E7%9A%84%E9%A2%9C%E8%89%B2.jpg" alt="几种color"></p>
+<p><strong>或者看谷歌文档（自备梯子）：<a href="https://developer.android.com/training/material/theme.html" target="_blank" rel="noopener">Material Theme</a></strong></p>
+<p>由于我们项目里设定了toobar的高度，这里指定了actionBarSize，然后通过设置toolbar高度为这个值；</p>
+<h3 id="布局代码"><a href="#布局代码" class="headerlink" title="布局代码"></a>布局代码</h3><p>由于项目中toolbar归属于fragment管理，所以这里是将toolbar封装在fragment中处理了，这里通过各个fragment的xml添加<code>&lt;include layout=&quot;@layout/toolbar_layout&quot;/&gt;</code></p>
+<p><strong>toolbar_layout.xml如下：</strong></p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version=<span class="string">"1.0"</span> encoding=<span class="string">"utf-8"</span>?&gt;</span><br><span class="line">&lt;android.support.v7.widget.Toolbar</span><br><span class="line">    xmlns:android=<span class="string">"http://schemas.android.com/apk/res/android"</span></span><br><span class="line">    xmlns:tools=<span class="string">"http://schemas.android.com/tools"</span></span><br><span class="line">    xmlns:app=<span class="string">"http://schemas.android.com/apk/res-auto"</span></span><br><span class="line">    android:id=<span class="string">"@+id/toolbar"</span></span><br><span class="line">    android:layout_width=<span class="string">"match_parent"</span></span><br><span class="line">    android:layout_height=<span class="string">"?attr/actionBarSize"</span></span><br><span class="line">    android:background=<span class="string">"?attr/colorPrimary"</span></span><br><span class="line">    android:elevation=<span class="string">"1dp"</span>&gt;</span><br><span class="line">    &lt;TextView</span><br><span class="line">        android:id=<span class="string">"@+id/nav_left_text"</span></span><br><span class="line">        android:layout_width=<span class="string">"wrap_content"</span></span><br><span class="line">        android:layout_height=<span class="string">"match_parent"</span></span><br><span class="line">        android:drawableLeft=<span class="string">"@drawable/nav_back_light"</span></span><br><span class="line">        android:drawableStart=<span class="string">"@drawable/nav_back_light"</span></span><br><span class="line">        android:layout_gravity = <span class="string">"start"</span></span><br><span class="line">        android:gravity=<span class="string">"center"</span></span><br><span class="line">        android:minWidth=<span class="string">"50dp"</span></span><br><span class="line">        android:text=<span class="string">"返回"</span></span><br><span class="line">        android:textColor=<span class="string">"@android:color/white"</span></span><br><span class="line">        android:textSize=<span class="string">"@dimen/font_title"</span></span><br><span class="line">        android:visibility=<span class="string">"gone"</span>/&gt;</span><br><span class="line">    &lt;TextView</span><br><span class="line">        android:id=<span class="string">"@+id/center_title"</span></span><br><span class="line">        android:layout_width=<span class="string">"wrap_content"</span></span><br><span class="line">        android:layout_height=<span class="string">"wrap_content"</span></span><br><span class="line">        android:layout_gravity = <span class="string">"center"</span></span><br><span class="line">        android:textColor=<span class="string">"@android:color/white"</span></span><br><span class="line">        android:textSize=<span class="string">"@dimen/font_large"</span></span><br><span class="line">        tools:text=<span class="string">"标题"</span> /&gt;</span><br><span class="line">    &lt;TextView</span><br><span class="line">        android:id=<span class="string">"@+id/nav_right_text_button"</span></span><br><span class="line">        android:layout_width=<span class="string">"wrap_content"</span></span><br><span class="line">        android:layout_height=<span class="string">"match_parent"</span></span><br><span class="line">        android:layout_gravity = <span class="string">"end"</span></span><br><span class="line">        android:gravity=<span class="string">"center"</span></span><br><span class="line">        android:minWidth=<span class="string">"50dp"</span></span><br><span class="line">        android:paddingLeft=<span class="string">"10dp"</span></span><br><span class="line">        android:paddingRight=<span class="string">"10dp"</span></span><br><span class="line">        android:textColor=<span class="string">"@color/color_999"</span></span><br><span class="line">        android:textSize=<span class="string">"@dimen/font_normal"</span></span><br><span class="line">        android:visibility=<span class="string">"gone"</span> /&gt;</span><br><span class="line">&lt;/android.support.v7.widget.Toolbar&gt;</span><br></pre></td></tr></table></figure>
+<p><strong>toolbar上的东西被我分成五种：</strong></p>
+<ol>
+<li>navigationicon：通过.setNavigationIcon去处理</li>
+<li>logo：通过setlogo</li>
+<li>title与subtitle：通过.setTitle与setSubtitle去处理</li>
+<li>自定义部分：这里也分成左中右三个部分，可以看上面布局文件，通过标签<code>android:layout_gravity</code> 来指定位置，这里有坑，自定义部分布局最左边有间隙，如果要去掉，可以设置：<code>contentInset</code> 这个标签去除。</li>
+<li>menu：menu的显示方式可以自行设置</li>
+</ol>
+<p><strong>这样来看，基本所有的需求都能满足了；</strong></p>
+<h3 id="fragment中抽象封装："><a href="#fragment中抽象封装：" class="headerlink" title="fragment中抽象封装："></a>fragment中抽象封装：</h3><p>这里要看各个项目需求，由于我们公司项目中对最右边图标灵活度要求并不高，我一般使用menu就可以解决了，如果menu不能满足你，完全可以使用自定义部分中的“右部分”。</p>
+<p>下面进入封装，在baseFragment中做了如下封装，项目中使用的是JakeWharton的注入框架<a href="https://github.com/JakeWharton/butterknife" target="_blank" rel="noopener">butterknife链接</a></p>
+<ol>
+<li>首先注入toolbar及自定义部分中除最右边图标的控件，因为最右边图标我们项目中一般menu就够用了：</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@BindView</span>(R.id.toolbar)</span><br><span class="line"><span class="keyword">protected</span> Toolbar mToolBar;</span><br><span class="line"><span class="meta">@BindView</span>(R.id.center_title)</span><br><span class="line">TextView mCenterTitle;</span><br><span class="line"><span class="meta">@BindView</span>(R.id.nav_left_text)</span><br><span class="line">TextView mNavLeftText;</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>然后在初始化fragment视图时候将mToolBar、mCenterTitle、mNavLeftText传给其子fragment进行定制，这三个控件传递出去后完全可以定制navigationicon、logo、title与subtitle、自定义部分这四个部分。以下代码中的initview和popFragment是我封装好的在fragment的OncreateView时候调用的，详细封装请看：<a href="https://zzz468005600.github.io/posts/Android/2018-06-11-%E6%B5%85%E8%B0%88Activity-Fragment%E6%A8%A1%E5%9D%97%E5%8C%96%E5%B0%81%E8%A3%85.html#more" target="_blank" rel="noopener">浅谈Activity,Fragment模块化封装</a></li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initView</span><span class="params">(View view, Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">      initToolBar(mToolBar, mCenterTitle, mNavLeftText);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initToolBar</span><span class="params">(Toolbar toolbar, TextView centerTitle, TextView navLeftText)</span></span>&#123;</span><br><span class="line">        ((AppCompatActivity)getActivity()).setSupportActionBar(toolbar);</span><br><span class="line">        ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayShowTitleEnabled(<span class="keyword">false</span>);</span><br><span class="line">toolbar.setNavigationIcon(R.drawable.nav_back_light);</span><br><span class="line">toolbar.setNavigationOnClickListener(<span class="keyword">new</span> View.OnClickListener() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</span><br><span class="line">                popFragment();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>这里有个坑：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayShowTitleEnabled(<span class="keyword">false</span>);</span><br></pre></td></tr></table></figure>
+<p>必须设置这个，不然默认的title一直在，即使你设置了toolbar.settitle(“xxoo”)。。。</p>
+<p>这里做了一件事，给navigationButton导航按钮做了个监听，pop出当前这个fragment出栈</p>
+<ol start="3">
+<li>还剩最后一个东西没有定制：menu</li>
+</ol>
+<p>这个很简单，不过也要注意下，必须在fragment中设置菜单，一定要先设置：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setHasOptionsMenu(<span class="keyword">true</span>);</span><br></pre></td></tr></table></figure>
+<p>关于源码，可以去看下，然后处理方式很简单了：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onCreateOptionsMenu</span><span class="params">(Menu menu, MenuInflater inflater)</span> </span>&#123;</span><br><span class="line">        inflater.inflate(R.menu.search, menu);</span><br><span class="line">        <span class="keyword">super</span>.onCreateOptionsMenu(menu, inflater);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>这里也有个坑：如果你没有设置：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">((AppCompatActivity)getActivity()).setSupportActionBar(toolbar);</span><br></pre></td></tr></table></figure>
+<p>那么<code>onCreateOptionsMenu</code> 并不会被回调。</p>
+<ol start="4">
+<li>最后做下menu的监听即可：</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">toolbar.setOnMenuItemClickListener(<span class="keyword">new</span> Toolbar.OnMenuItemClickListener() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onMenuItemClick</span><span class="params">(MenuItem item)</span> </span>&#123;</span><br><span class="line">                <span class="keyword">switch</span> (item.getItemId())&#123;</span><br><span class="line">                    &#125;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Toolbar是android5.0之后出现的MD设计风的控件，支持5.0之后的elevation特性，相比较Actionbar具有高度自定义的特性，因为其本身是一个ViewGroup内部布局完全自由处理，这样大大扩展了其自由定制性，不多说，赶紧开始替换Actionbar吧！</p>
+<p><strong>具体代码请看我的github:<a href="https://github.com/Zzz468005600/Stone" target="_blank" rel="noopener">Android练习小项目</a></strong></p>
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/ToolBar/" rel="tag"># ToolBar</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/Android/2018-06-11-Retrofit项目封装使用.html" rel="next" title="Retrofit项目封装使用">
+                <i class="fa fa-chevron-left"></i> Retrofit项目封装使用
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/Java/2018-06-11-JVM理解.html" rel="prev" title="JVM理解">
+                JVM理解 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="http://stonezhu.top/avatar.jpg" alt="朱磊">
+            
+              <p class="site-author-name" itemprop="name">朱磊</p>
+              <p class="site-description motion-element" itemprop="description">stone</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">86</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">11</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">69</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/Zzz468005600" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://zhulei.blog.csdn.net" target="_blank" title="CSDN"><i class="fa fa-fw fa-globe"></i>CSDN</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://www.jianshu.com/u/9f869537b90e" target="_blank" title="简书"><i class="fa fa-fw fa-heartbeat"></i>简书</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://juejin.im/user/5b246031e51d4558d43fb44d/posts" target="_blank" title="掘金"><i class="fa fa-fw fa-spinner"></i>掘金</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://blog.luliangdev.cn" title="LuLiangDev" target="_blank">LuLiangDev</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#继承关系"><span class="nav-text">继承关系</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#项目封装"><span class="nav-text">项目封装</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#配置theme"><span class="nav-text">配置theme</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#布局代码"><span class="nav-text">布局代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#fragment中抽象封装："><span class="nav-text">fragment中抽象封装：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">朱磊</span>
+
+  
+
+  
+</div>
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+  
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/reading_progress/reading_progress.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

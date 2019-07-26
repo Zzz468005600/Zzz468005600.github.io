@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico?v=6.3.0">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+  <meta name="description" content="Python之所以自称“batteries included”，就是因为内置了许多非常有用的模块，无需额外安装和配置，即可直接使用。">
+<meta name="keywords" content="Python,常用模块">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python学习之常用模块">
+<meta property="og:url" content="http://zhuleiblog.com/posts/Python/2018-06-24-Python学习之常用模块.html">
+<meta property="og:site_name" content="朱磊">
+<meta property="og:description" content="Python之所以自称“batteries included”，就是因为内置了许多非常有用的模块，无需额外安装和配置，即可直接使用。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-03-09T05:22:40.520Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Python学习之常用模块">
+<meta name="twitter:description" content="Python之所以自称“batteries included”，就是因为内置了许多非常有用的模块，无需额外安装和配置，即可直接使用。">
+
+
+
+
+
+
+  <link rel="canonical" href="http://zhuleiblog.com/posts/Python/2018-06-24-Python学习之常用模块.html">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Python学习之常用模块 | 朱磊</title>
+  
+
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?084a44ac8106ee8c8af269853fa68cda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">朱磊</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">select * from life</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签<span class="badge">69</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类<span class="badge">11</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">86</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+    <div class="reading-progress-bar"></div>
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/Python/2018-06-24-Python学习之常用模块.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="朱磊">
+      <meta itemprop="description" content="stone">
+      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="朱磊">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Python学习之常用模块
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2018-06-24 18:18:02" itemprop="dateCreated datePublished" datetime="2018-06-24T18:18:02+08:00">2018-06-24</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Python/" itemprop="url" rel="index"><span itemprop="name">Python</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote class="blockquote-center">Python之所以自称“batteries included”，就是因为内置了许多非常有用的模块，无需额外安装和配置，即可直接使用。</blockquote>
+
+<a id="more"></a>
+<p><strong><a href="http://zhuleiblog.com/categories/Python/">Python学习目录</a></strong></p>
+<ol>
+<li><a href="http://zhuleiblog.com/posts/Python/2018-06-12-%E5%9C%A8Mac%E4%B8%8B%E4%BD%BF%E7%94%A8Python3.html">在Mac下使用Python3</a></li>
+<li><a href="http://zhuleiblog.com/posts/Python/2018-06-12-Python%E5%AD%A6%E4%B9%A0%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B.html">Python学习之数据类型</a></li>
+<li><a href="http://zhuleiblog.com/posts/Python/2018-06-12-Python%E5%AD%A6%E4%B9%A0%E4%B9%8B%E5%87%BD%E6%95%B0.html">Python学习之函数</a></li>
+<li><a href="http://zhuleiblog.com/posts/Python/2018-06-12-Python%E5%AD%A6%E4%B9%A0%E4%B9%8B%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7.html">Python学习之高级特性</a></li>
+<li><a href="http://zhuleiblog.com/posts/Python/2018-06-12-Python%E5%AD%A6%E4%B9%A0%E4%B9%8B%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B.html">Python学习之函数式编程</a></li>
+<li><a href="http://zhuleiblog.com/posts/Python/2018-06-15-Python%E5%AD%A6%E4%B9%A0%E4%B9%8B%E6%A8%A1%E5%9D%97.html">Python学习之模块</a></li>
+<li><a href="http://zhuleiblog.com/posts/Python/2018-06-16-Python%E5%AD%A6%E4%B9%A0%E4%B9%8B%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E7%BC%96%E7%A8%8B.html">Python学习之面向对象编程</a></li>
+<li><a href="http://zhuleiblog.com/posts/Python/2018-06-19-Python%E5%AD%A6%E4%B9%A0%E4%B9%8B%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E9%AB%98%E7%BA%A7%E7%BC%96%E7%A8%8B.html">Python学习之面向对象高级编程</a></li>
+<li><a href="http://zhuleiblog.com/posts/Python/2018-06-20-Python%E5%AD%A6%E4%B9%A0%E4%B9%8B%E9%94%99%E8%AF%AF%E8%B0%83%E8%AF%95%E5%92%8C%E6%B5%8B%E8%AF%95.html">Python学习之错误调试和测试</a></li>
+<li><a href="http://zhuleiblog.com/posts/Python/2018-06-20-Python%E5%AD%A6%E4%B9%A0%E4%B9%8BIO%E7%BC%96%E7%A8%8B.html">Python学习之IO编程</a></li>
+<li><a href="http://zhuleiblog.com/posts/Python/2018-06-24-Python%E5%AD%A6%E4%B9%A0%E4%B9%8B%E8%BF%9B%E7%A8%8B%E5%92%8C%E7%BA%BF%E7%A8%8B.html">Python学习之进程和线程</a></li>
+<li><a href="http://zhuleiblog.com/posts/Python/2018-06-24-Python%E5%AD%A6%E4%B9%A0%E4%B9%8B%E6%AD%A3%E5%88%99.html">Python学习之正则</a></li>
+<li><a href="http://zhuleiblog.com/posts/Python/2018-06-24-Python%E5%AD%A6%E4%B9%A0%E4%B9%8B%E5%B8%B8%E7%94%A8%E6%A8%A1%E5%9D%97.html">Python学习之常用模块</a></li>
+<li><a href="http://zhuleiblog.com/posts/Python/2018-06-25-Python%E5%AD%A6%E4%B9%A0%E4%B9%8B%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B.html">Python学习之网络编程</a></li>
+</ol>
+<h1 id="常用内建模块"><a href="#常用内建模块" class="headerlink" title="常用内建模块"></a>常用内建模块</h1><h2 id="datetime"><a href="#datetime" class="headerlink" title="datetime"></a>datetime</h2><p>datetime是Python处理日期和时间的标准库。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">from</span> datetime <span class="keyword">import</span> datetime</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>dt = datetime(<span class="number">2015</span>, <span class="number">4</span>, <span class="number">19</span>, <span class="number">12</span>, <span class="number">20</span>) <span class="comment"># 用指定日期时间创建datetime</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>dt.timestamp() <span class="comment"># 把datetime转换为timestamp</span></span><br><span class="line"><span class="number">1429417200.0</span></span><br></pre></td></tr></table></figure>
+<p>注意Python的timestamp是一个浮点数。如果有小数位，小数位表示毫秒数。</p>
+<h2 id="collections"><a href="#collections" class="headerlink" title="collections"></a>collections</h2><p>collections是Python内建的一个集合模块，提供了许多有用的集合类。</p>
+<h3 id="namedtuple"><a href="#namedtuple" class="headerlink" title="namedtuple"></a>namedtuple</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">from</span> collections <span class="keyword">import</span> namedtuple</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>Point = namedtuple(<span class="string">'Point'</span>, [<span class="string">'x'</span>, <span class="string">'y'</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>p = Point(<span class="number">1</span>, <span class="number">2</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>p.x</span><br><span class="line"><span class="number">1</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>p.y</span><br><span class="line"><span class="number">2</span></span><br></pre></td></tr></table></figure>
+<p><code>namedtuple</code>是一个函数，它用来创建一个自定义的<code>tuple</code>对象，并且规定了<code>tuple</code>元素的个数，并可以用属性而不是索引来引用<code>tuple</code>的某个元素。</p>
+<p>这样一来，我们用<code>namedtuple</code>可以很方便地定义一种数据类型，它具备tuple的不变性，又可以根据属性来引用，使用十分方便。</p>
+<h3 id="deque"><a href="#deque" class="headerlink" title="deque"></a>deque</h3><p>使用<code>list</code>存储数据时，按索引访问元素很快，但是插入和删除元素就很慢了，因为<code>list</code>是线性存储，数据量大的时候，插入和删除效率很低。</p>
+<p>deque是为了高效实现插入和删除操作的双向列表，适合用于队列和栈：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">from</span> collections <span class="keyword">import</span> deque</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>q = deque([<span class="string">'a'</span>, <span class="string">'b'</span>, <span class="string">'c'</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>q.append(<span class="string">'x'</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>q.appendleft(<span class="string">'y'</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>q</span><br><span class="line">deque([<span class="string">'y'</span>, <span class="string">'a'</span>, <span class="string">'b'</span>, <span class="string">'c'</span>, <span class="string">'x'</span>])</span><br></pre></td></tr></table></figure>
+<p><code>deque</code>除了实现list的<code>append()</code>和<code>pop()</code>外，还支持<code>appendleft()</code>和<code>popleft()</code>，这样就可以非常高效地往头部添加或删除元素。</p>
+<h3 id="defaultdict"><a href="#defaultdict" class="headerlink" title="defaultdict"></a>defaultdict</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">from</span> collections <span class="keyword">import</span> defaultdict</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>dd = defaultdict(<span class="keyword">lambda</span>: <span class="string">'N/A'</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>dd[<span class="string">'key1'</span>] = <span class="string">'abc'</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>dd[<span class="string">'key1'</span>] <span class="comment"># key1存在</span></span><br><span class="line"><span class="string">'abc'</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>dd[<span class="string">'key2'</span>] <span class="comment"># key2不存在，返回默认值</span></span><br><span class="line"><span class="string">'N/A'</span></span><br></pre></td></tr></table></figure>
+<p>注意默认值是调用函数返回的，而函数在创建<code>defaultdict</code>对象时传入。</p>
+<p>除了在Key不存在时返回默认值，<code>defaultdict</code>的其他行为跟<code>dict</code>是完全一样的。</p>
+<h3 id="OrderedDict"><a href="#OrderedDict" class="headerlink" title="OrderedDict"></a>OrderedDict</h3><p>使用<code>dict</code>时，Key是无序的。在对<code>dict</code>做迭代时，我们无法确定Key的顺序。</p>
+<p>如果要保持Key的顺序，可以用<code>OrderedDict</code>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">from</span> collections <span class="keyword">import</span> OrderedDict</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d = dict([(<span class="string">'a'</span>, <span class="number">1</span>), (<span class="string">'b'</span>, <span class="number">2</span>), (<span class="string">'c'</span>, <span class="number">3</span>)])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d <span class="comment"># dict的Key是无序的</span></span><br><span class="line">&#123;<span class="string">'a'</span>: <span class="number">1</span>, <span class="string">'c'</span>: <span class="number">3</span>, <span class="string">'b'</span>: <span class="number">2</span>&#125;</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>od = OrderedDict([(<span class="string">'a'</span>, <span class="number">1</span>), (<span class="string">'b'</span>, <span class="number">2</span>), (<span class="string">'c'</span>, <span class="number">3</span>)])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>od <span class="comment"># OrderedDict的Key是有序的</span></span><br><span class="line">OrderedDict([(<span class="string">'a'</span>, <span class="number">1</span>), (<span class="string">'b'</span>, <span class="number">2</span>), (<span class="string">'c'</span>, <span class="number">3</span>)])</span><br></pre></td></tr></table></figure>
+<p>注意，<code>OrderedDict</code>的Key会按照插入的顺序排列，不是Key本身排序：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>od = OrderedDict()</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>od[<span class="string">'z'</span>] = <span class="number">1</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>od[<span class="string">'y'</span>] = <span class="number">2</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>od[<span class="string">'x'</span>] = <span class="number">3</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>list(od.keys()) <span class="comment"># 按照插入的Key的顺序返回</span></span><br><span class="line">[<span class="string">'z'</span>, <span class="string">'y'</span>, <span class="string">'x'</span>]</span><br></pre></td></tr></table></figure>
+<p><code>OrderedDict</code>可以实现一个FIFO（先进先出）的dict，当容量超出限制时，先删除最早添加的Key：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> collections <span class="keyword">import</span> OrderedDict</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">LastUpdatedOrderedDict</span><span class="params">(OrderedDict)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, capacity)</span>:</span></span><br><span class="line">        super(LastUpdatedOrderedDict, self).__init__()</span><br><span class="line">        self._capacity = capacity</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__setitem__</span><span class="params">(self, key, value)</span>:</span></span><br><span class="line">        containsKey = <span class="number">1</span> <span class="keyword">if</span> key <span class="keyword">in</span> self <span class="keyword">else</span> <span class="number">0</span></span><br><span class="line">        <span class="keyword">if</span> len(self) - containsKey &gt;= self._capacity:</span><br><span class="line">            last = self.popitem(last=<span class="literal">False</span>)</span><br><span class="line">            print(<span class="string">'remove:'</span>, last)</span><br><span class="line">        <span class="keyword">if</span> containsKey:</span><br><span class="line">            <span class="keyword">del</span> self[key]</span><br><span class="line">            print(<span class="string">'set:'</span>, (key, value))</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            print(<span class="string">'add:'</span>, (key, value))</span><br><span class="line">        OrderedDict.__setitem__(self, key, value)</span><br></pre></td></tr></table></figure>
+<h3 id="Counter"><a href="#Counter" class="headerlink" title="Counter"></a>Counter</h3><p><code>Counter</code>是一个简单的计数器，例如，统计字符出现的个数：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">from</span> collections <span class="keyword">import</span> Counter</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>c = Counter()</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">for</span> ch <span class="keyword">in</span> <span class="string">'programming'</span>:</span><br><span class="line"><span class="meta">... </span>    c[ch] = c[ch] + <span class="number">1</span></span><br><span class="line">...</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>c</span><br><span class="line">Counter(&#123;<span class="string">'g'</span>: <span class="number">2</span>, <span class="string">'m'</span>: <span class="number">2</span>, <span class="string">'r'</span>: <span class="number">2</span>, <span class="string">'a'</span>: <span class="number">1</span>, <span class="string">'i'</span>: <span class="number">1</span>, <span class="string">'o'</span>: <span class="number">1</span>, <span class="string">'n'</span>: <span class="number">1</span>, <span class="string">'p'</span>: <span class="number">1</span>&#125;)</span><br></pre></td></tr></table></figure>
+<p><code>Counter</code>实际上也是<code>dict</code>的一个子类，上面的结果可以看出，字符<code>&#39;g&#39;</code>、<code>&#39;m&#39;</code>、<code>&#39;r&#39;</code>各出现了两次，其他字符各出现了一次。</p>
+<h2 id="base64"><a href="#base64" class="headerlink" title="base64"></a>base64</h2><p>Base64是一种用64个字符来表示任意二进制数据的方法。</p>
+<p>Base64编码会把3字节的二进制数据编码为4字节的文本数据，长度增加33%，好处是编码后的文本数据可以在邮件正文、网页等直接显示。</p>
+<p>如果要编码的二进制数据不是3的倍数，最后会剩下1个或2个字节怎么办？Base64用<code>\x00</code>字节在末尾补足后，再在编码的末尾加上1个或2个<code>=</code>号，表示补了多少字节，解码的时候，会自动去掉。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> base64</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>base64.b64encode(<span class="string">b'binary\x00string'</span>)</span><br><span class="line"><span class="string">b'YmluYXJ5AHN0cmluZw=='</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>base64.b64decode(<span class="string">b'YmluYXJ5AHN0cmluZw=='</span>)</span><br><span class="line"><span class="string">b'binary\x00string'</span></span><br></pre></td></tr></table></figure>
+<h2 id="struct"><a href="#struct" class="headerlink" title="struct"></a>struct</h2><p><code>struct</code>模块来解决<code>bytes</code>和其他二进制数据类型的转换，<code>struct</code>的<code>pack</code>函数把任意数据类型变成<code>bytes</code>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> struct</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>struct.pack(<span class="string">'&gt;I'</span>, <span class="number">10240099</span>)</span><br><span class="line"><span class="string">b'\x00\x9c@c'</span></span><br></pre></td></tr></table></figure>
+<p><code>pack</code>的第一个参数是处理指令，<code>&#39;&gt;I&#39;</code>的意思是：</p>
+<p><code>&gt;</code>表示字节顺序是big-endian，也就是网络序，<code>I</code>表示4字节无符号整数。’</p>
+<h2 id="hashlib"><a href="#hashlib" class="headerlink" title="hashlib"></a>hashlib</h2><p>Python的hashlib提供了常见的摘要算法，如MD5，SHA1等等。</p>
+<p>我们以常见的摘要算法MD5为例，计算出一个字符串的MD5值：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> hashlib</span><br><span class="line"></span><br><span class="line">md5 = hashlib.md5()</span><br><span class="line">md5.update(<span class="string">'how to use md5 in python hashlib?'</span>.encode(<span class="string">'utf-8'</span>))</span><br><span class="line">print(md5.hexdigest())</span><br></pre></td></tr></table></figure>
+<p>计算结果如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">d26a53750bc40b38b65a520292f69306</span><br></pre></td></tr></table></figure>
+<p><strong>还有很多内建模块也常使用，如：hmac，itertools，contextlib，urllib，XML，HTMLParser</strong></p>
+<h1 id="常用第三方模块"><a href="#常用第三方模块" class="headerlink" title="常用第三方模块"></a>常用第三方模块</h1><p>除了内建的模块外，Python还有大量的第三方模块。</p>
+<p>基本上，所有的第三方模块都会在<a href="https://pypi.python.org/" target="_blank" rel="noopener">PyPI - the Python Package Index</a>上注册，只要找到对应的模块名字，即可用pip安装。</p>
+<p>此外，在<a href="https://www.liaoxuefeng.com/wiki/0014316089557264a6b348958f449949df42a6d3a2e542c000/00143186362353505516c5d4e38456fb225c18cc5b54ffb000" target="_blank" rel="noopener">安装第三方模块</a>一节中，我们强烈推荐安装<a href="https://www.anaconda.com/" target="_blank" rel="noopener">Anaconda</a>，安装后，数十个常用的第三方模块就已经就绪，不用pip手动安装。</p>
+<h2 id="Pillow"><a href="#Pillow" class="headerlink" title="Pillow"></a>Pillow</h2><p>PIL：Python Imaging Library，已经是Python平台事实上的图像处理标准库了。PIL功能非常强大，但API却非常简单易用。</p>
+<p>由于PIL仅支持到Python 2.7，加上年久失修，于是一群志愿者在PIL的基础上创建了兼容的版本，名字叫<a href="https://github.com/python-pillow/Pillow" target="_blank" rel="noopener">Pillow</a>，支持最新Python 3.x，又加入了许多新特性，因此，我们可以直接安装使用Pillow。</p>
+<h3 id="安装Pillow"><a href="#安装Pillow" class="headerlink" title="安装Pillow"></a>安装Pillow</h3><p>如果安装了Anaconda，Pillow就已经可用了。否则，需要在命令行下通过pip安装：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ pip install pillow</span><br></pre></td></tr></table></figure>
+<p>如果遇到<code>Permission denied</code>安装失败，请加上<code>sudo</code>重试。</p>
+<h3 id="操作图像"><a href="#操作图像" class="headerlink" title="操作图像"></a>操作图像</h3><p>来看看最常见的图像缩放操作，只需三四行代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> PIL <span class="keyword">import</span> Image</span><br><span class="line"></span><br><span class="line"><span class="comment"># 打开一个jpg图像文件，注意是当前路径:</span></span><br><span class="line">im = Image.open(<span class="string">'test.jpg'</span>)</span><br><span class="line"><span class="comment"># 获得图像尺寸:</span></span><br><span class="line">w, h = im.size</span><br><span class="line">print(<span class="string">'Original image size: %sx%s'</span> % (w, h))</span><br><span class="line"><span class="comment"># 缩放到50%:</span></span><br><span class="line">im.thumbnail((w//<span class="number">2</span>, h//<span class="number">2</span>))</span><br><span class="line">print(<span class="string">'Resize image to: %sx%s'</span> % (w//<span class="number">2</span>, h//<span class="number">2</span>))</span><br><span class="line"><span class="comment"># 把缩放后的图像用jpeg格式保存:</span></span><br><span class="line">im.save(<span class="string">'thumbnail.jpg'</span>, <span class="string">'jpeg'</span>)</span><br></pre></td></tr></table></figure>
+<p>其他功能如切片、旋转、滤镜、输出文字、调色板等一应俱全。</p>
+<p>比如，模糊效果也只需几行代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> PIL <span class="keyword">import</span> Image, ImageFilter</span><br><span class="line"></span><br><span class="line"><span class="comment"># 打开一个jpg图像文件，注意是当前路径:</span></span><br><span class="line">im = Image.open(<span class="string">'test.jpg'</span>)</span><br><span class="line"><span class="comment"># 应用模糊滤镜:</span></span><br><span class="line">im2 = im.filter(ImageFilter.BLUR)</span><br><span class="line">im2.save(<span class="string">'blur.jpg'</span>, <span class="string">'jpeg'</span>)</span><br></pre></td></tr></table></figure>
+<h2 id="requests"><a href="#requests" class="headerlink" title="requests"></a>requests</h2><p>用于访问网络资源。</p>
+<h3 id="安装requests"><a href="#安装requests" class="headerlink" title="安装requests"></a>安装requests</h3><p>如果安装了Anaconda，requests就已经可用了。否则，需要在命令行下通过pip安装：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ pip install requests</span><br></pre></td></tr></table></figure>
+<p>如果遇到Permission denied安装失败，请加上sudo重试。</p>
+<h3 id="使用requests"><a href="#使用requests" class="headerlink" title="使用requests"></a>使用requests</h3><p>要通过GET访问一个页面，只需要几行代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> requests</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>r = requests.get(<span class="string">'https://www.douban.com/'</span>) <span class="comment"># 豆瓣首页</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>r.status_code</span><br><span class="line"><span class="number">200</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>r.text</span><br><span class="line">r.text</span><br><span class="line"><span class="string">'&lt;!DOCTYPE HTML&gt;\n&lt;html&gt;\n&lt;head&gt;\n&lt;meta name="description" content="提供图书、电影、音乐唱片的推荐、评论和...'</span></span><br></pre></td></tr></table></figure>
+<p>对于带参数的URL，传入一个dict作为<code>params</code>参数：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>r = requests.get(<span class="string">'https://www.douban.com/search'</span>, params=&#123;<span class="string">'q'</span>: <span class="string">'python'</span>, <span class="string">'cat'</span>: <span class="string">'1001'</span>&#125;)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>r.url <span class="comment"># 实际请求的URL</span></span><br><span class="line"><span class="string">'https://www.douban.com/search?q=python&amp;cat=1001'</span></span><br></pre></td></tr></table></figure>
+<p>requests自动检测编码，可以使用<code>encoding</code>属性查看：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>r.encoding</span><br><span class="line"><span class="string">'utf-8'</span></span><br></pre></td></tr></table></figure>
+<p>无论响应是文本还是二进制内容，我们都可以用<code>content</code>属性获得<code>bytes</code>对象：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>r.content</span><br><span class="line"><span class="string">b'&lt;!DOCTYPE html&gt;\n&lt;html&gt;\n&lt;head&gt;\n&lt;meta http-equiv="Content-Type" content="text/html; charset=utf-8"&gt;\n...'</span></span><br></pre></td></tr></table></figure>
+<p>requests的方便之处还在于，对于特定类型的响应，例如JSON，可以直接获取：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>r = requests.get(<span class="string">'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20%3D%202151330&amp;format=json'</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>r.json()</span><br><span class="line">&#123;<span class="string">'query'</span>: &#123;<span class="string">'count'</span>: <span class="number">1</span>, <span class="string">'created'</span>: <span class="string">'2017-11-17T07:14:12Z'</span>, ...</span><br></pre></td></tr></table></figure>
+<p>需要传入HTTP Header时，我们传入一个dict作为<code>headers</code>参数：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>r = requests.get(<span class="string">'https://www.douban.com/'</span>, headers=&#123;<span class="string">'User-Agent'</span>: <span class="string">'Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit'</span>&#125;)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>r.text</span><br><span class="line"><span class="string">'&lt;!DOCTYPE html&gt;\n&lt;html&gt;\n&lt;head&gt;\n&lt;meta charset="UTF-8"&gt;\n &lt;title&gt;豆瓣(手机版)&lt;/title&gt;...'</span></span><br></pre></td></tr></table></figure>
+<p>要发送POST请求，只需要把<code>get()</code>方法变成<code>post()</code>，然后传入<code>data</code>参数作为POST请求的数据：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>r = requests.post(<span class="string">'https://accounts.douban.com/login'</span>, data=&#123;<span class="string">'form_email'</span>: <span class="string">'abc@example.com'</span>, <span class="string">'form_password'</span>: <span class="string">'123456'</span>&#125;)</span><br></pre></td></tr></table></figure>
+<p>requests默认使用<code>application/x-www-form-urlencoded</code>对POST数据编码。如果要传递JSON数据，可以直接传入json参数：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">params = &#123;<span class="string">'key'</span>: <span class="string">'value'</span>&#125;</span><br><span class="line">r = requests.post(url, json=params) <span class="comment"># 内部自动序列化为JSON</span></span><br></pre></td></tr></table></figure>
+<p>类似的，上传文件需要更复杂的编码格式，但是requests把它简化成<code>files</code>参数：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>upload_files = &#123;<span class="string">'file'</span>: open(<span class="string">'report.xls'</span>, <span class="string">'rb'</span>)&#125;</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>r = requests.post(url, files=upload_files)</span><br></pre></td></tr></table></figure>
+<p>在读取文件时，注意务必使用<code>&#39;rb&#39;</code>即二进制模式读取，这样获取的<code>bytes</code>长度才是文件的长度。</p>
+<p>把<code>post()</code>方法替换为<code>put()</code>，<code>delete()</code>等，就可以以PUT或DELETE方式请求资源。</p>
+<p>除了能轻松获取响应内容外，requests对获取HTTP响应的其他信息也非常简单。例如，获取响应头：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>r.headers</span><br><span class="line">&#123;Content-Type<span class="string">': '</span>text/html; charset=utf<span class="number">-8</span><span class="string">', '</span>Transfer-Encoding<span class="string">': '</span>chunked<span class="string">', '</span>Content-Encoding<span class="string">': '</span>gzip<span class="string">', ...&#125;</span></span><br><span class="line"><span class="string">&gt;&gt;&gt; r.headers['</span>Content-Type<span class="string">']</span></span><br><span class="line"><span class="string">'</span>text/html; charset=utf<span class="number">-8</span><span class="string">'</span></span><br></pre></td></tr></table></figure>
+<p>requests对Cookie做了特殊处理，使得我们不必解析Cookie就可以轻松获取指定的Cookie：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>r.cookies[<span class="string">'ts'</span>]</span><br><span class="line"><span class="string">'example_cookie_12345'</span></span><br></pre></td></tr></table></figure>
+<p>要在请求中传入Cookie，只需准备一个dict传入<code>cookies</code>参数：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>cs = &#123;<span class="string">'token'</span>: <span class="string">'12345'</span>, <span class="string">'status'</span>: <span class="string">'working'</span>&#125;</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>r = requests.get(url, cookies=cs)</span><br></pre></td></tr></table></figure>
+<p>最后，要指定超时，传入以秒为单位的timeout参数：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>r = requests.get(url, timeout=<span class="number">2.5</span>) <span class="comment"># 2.5秒后超时</span></span><br></pre></td></tr></table></figure>
+<h2 id="chardet"><a href="#chardet" class="headerlink" title="chardet"></a>chardet</h2><p>用来检测编码。</p>
+<h3 id="安装chardet"><a href="#安装chardet" class="headerlink" title="安装chardet"></a>安装chardet</h3><p>如果安装了Anaconda，chardet就已经可用了。否则，需要在命令行下通过pip安装：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ pip install chardet</span><br></pre></td></tr></table></figure>
+<p>如果遇到Permission denied安装失败，请加上sudo重试。</p>
+<h3 id="使用chardet"><a href="#使用chardet" class="headerlink" title="使用chardet"></a>使用chardet</h3><p>当我们拿到一个<code>bytes</code>时，就可以对其检测编码。用chardet检测编码，只需要一行代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>chardet.detect(<span class="string">b'Hello, world!'</span>)</span><br><span class="line">&#123;<span class="string">'encoding'</span>: <span class="string">'ascii'</span>, <span class="string">'confidence'</span>: <span class="number">1.0</span>, <span class="string">'language'</span>: <span class="string">''</span>&#125;</span><br></pre></td></tr></table></figure>
+<p>检测出的编码是<code>ascii</code>，注意到还有个<code>confidence</code>字段，表示检测的概率是1.0（即100%）。</p>
+<p>我们来试试检测GBK编码的中文：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>data = <span class="string">'离离原上草，一岁一枯荣'</span>.encode(<span class="string">'gbk'</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>chardet.detect(data)</span><br><span class="line">&#123;<span class="string">'encoding'</span>: <span class="string">'GB2312'</span>, <span class="string">'confidence'</span>: <span class="number">0.7407407407407407</span>, <span class="string">'language'</span>: <span class="string">'Chinese'</span>&#125;</span><br></pre></td></tr></table></figure>
+<p>检测的编码是<code>GB2312</code>，注意到GBK是GB2312的超集，两者是同一种编码，检测正确的概率是74%，<code>language</code>字段指出的语言是<code>&#39;Chinese&#39;</code>。</p>
+<p>对UTF-8编码进行检测：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>data = <span class="string">'离离原上草，一岁一枯荣'</span>.encode(<span class="string">'utf-8'</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>chardet.detect(data)</span><br><span class="line">&#123;<span class="string">'encoding'</span>: <span class="string">'utf-8'</span>, <span class="string">'confidence'</span>: <span class="number">0.99</span>, <span class="string">'language'</span>: <span class="string">''</span>&#125;</span><br></pre></td></tr></table></figure>
+<p>我们再试试对日文进行检测：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>data = <span class="string">'最新の主要ニュース'</span>.encode(<span class="string">'euc-jp'</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>chardet.detect(data)</span><br><span class="line">&#123;<span class="string">'encoding'</span>: <span class="string">'EUC-JP'</span>, <span class="string">'confidence'</span>: <span class="number">0.99</span>, <span class="string">'language'</span>: <span class="string">'Japanese'</span>&#125;</span><br></pre></td></tr></table></figure>
+<p>可见，用chardet检测编码，使用简单。获取到编码后，再转换为<code>str</code>，就可以方便后续处理。</p>
+<p>chardet支持检测的编码列表请参考官方文档<a href="https://chardet.readthedocs.io/en/latest/supported-encodings.html" target="_blank" rel="noopener">Supported encodings</a>。</p>
+<h2 id="psutil"><a href="#psutil" class="headerlink" title="psutil"></a>psutil</h2><p>psutil = process and system utilities，它不仅可以通过一两行代码实现系统监控，还可以跨平台使用，支持Linux／UNIX／OSX／Windows等，是系统管理员和运维小伙伴不可或缺的必备模块。</p>
+<h3 id="安装psutil"><a href="#安装psutil" class="headerlink" title="安装psutil"></a>安装psutil</h3><p>如果安装了Anaconda，psutil就已经可用了。否则，需要在命令行下通过pip安装：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ pip install psutil</span><br></pre></td></tr></table></figure>
+<p>如果遇到Permission denied安装失败，请加上sudo重试。</p>
+<h3 id="获取CPU信息"><a href="#获取CPU信息" class="headerlink" title="获取CPU信息"></a>获取CPU信息</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> psutil</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>psutil.cpu_count() <span class="comment"># CPU逻辑数量</span></span><br><span class="line"><span class="number">4</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>psutil.cpu_count(logical=<span class="literal">False</span>) <span class="comment"># CPU物理核心</span></span><br><span class="line"><span class="number">2</span></span><br><span class="line"><span class="comment"># 2说明是双核超线程, 4则是4核非超线程</span></span><br></pre></td></tr></table></figure>
+<p>psutil还可以获取用户信息、Windows服务等很多有用的系统信息，具体请参考psutil的官网：<a href="https://github.com/giampaolo/psutil" target="_blank" rel="noopener">https://github.com/giampaolo/psutil</a></p>
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Python/" rel="tag"># Python</a>
+          
+            <a href="/tags/常用模块/" rel="tag"># 常用模块</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/Python/2018-06-24-Python学习之正则.html" rel="next" title="Python学习之正则">
+                <i class="fa fa-chevron-left"></i> Python学习之正则
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/Python/2018-06-25-Python学习之网络编程.html" rel="prev" title="Python学习之网络编程">
+                Python学习之网络编程 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="http://stonezhu.top/avatar.jpg" alt="朱磊">
+            
+              <p class="site-author-name" itemprop="name">朱磊</p>
+              <p class="site-description motion-element" itemprop="description">stone</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">86</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">11</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">69</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/Zzz468005600" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://zhulei.blog.csdn.net" target="_blank" title="CSDN"><i class="fa fa-fw fa-globe"></i>CSDN</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://www.jianshu.com/u/9f869537b90e" target="_blank" title="简书"><i class="fa fa-fw fa-heartbeat"></i>简书</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://juejin.im/user/5b246031e51d4558d43fb44d/posts" target="_blank" title="掘金"><i class="fa fa-fw fa-spinner"></i>掘金</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://blog.luliangdev.cn" title="LuLiangDev" target="_blank">LuLiangDev</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#常用内建模块"><span class="nav-text">常用内建模块</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#datetime"><span class="nav-text">datetime</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#collections"><span class="nav-text">collections</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#namedtuple"><span class="nav-text">namedtuple</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#deque"><span class="nav-text">deque</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#defaultdict"><span class="nav-text">defaultdict</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#OrderedDict"><span class="nav-text">OrderedDict</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Counter"><span class="nav-text">Counter</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#base64"><span class="nav-text">base64</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#struct"><span class="nav-text">struct</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#hashlib"><span class="nav-text">hashlib</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#常用第三方模块"><span class="nav-text">常用第三方模块</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Pillow"><span class="nav-text">Pillow</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#安装Pillow"><span class="nav-text">安装Pillow</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#操作图像"><span class="nav-text">操作图像</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#requests"><span class="nav-text">requests</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#安装requests"><span class="nav-text">安装requests</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用requests"><span class="nav-text">使用requests</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#chardet"><span class="nav-text">chardet</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#安装chardet"><span class="nav-text">安装chardet</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用chardet"><span class="nav-text">使用chardet</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#psutil"><span class="nav-text">psutil</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#安装psutil"><span class="nav-text">安装psutil</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#获取CPU信息"><span class="nav-text">获取CPU信息</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">朱磊</span>
+
+  
+
+  
+</div>
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+  
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/reading_progress/reading_progress.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

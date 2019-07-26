@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico?v=6.3.0">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+  <meta name="description" content="在前面一篇文章中分析到了 SparkContext 中的 TaskScheduler 创建及启动。 在 StandaloneSchedulerBackend  start 代码里除了创建了一个 DriverEndpoint 用于 standalone 模式下用来和 Executor 通信之外还会创建一个 AppClient。 这个 AppClient 会向 Master 注册 Applicatio">
+<meta name="keywords" content="Spark">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark 源码分析（四）: Application 的注册">
+<meta property="og:url" content="http://zhuleiblog.com/posts/BigData/2019-07-02-Spark-源码分析（四）-Application-的注册.html">
+<meta property="og:site_name" content="朱磊">
+<meta property="og:description" content="在前面一篇文章中分析到了 SparkContext 中的 TaskScheduler 创建及启动。 在 StandaloneSchedulerBackend  start 代码里除了创建了一个 DriverEndpoint 用于 standalone 模式下用来和 Executor 通信之外还会创建一个 AppClient。 这个 AppClient 会向 Master 注册 Applicatio">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-07-02T08:02:22.370Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spark 源码分析（四）: Application 的注册">
+<meta name="twitter:description" content="在前面一篇文章中分析到了 SparkContext 中的 TaskScheduler 创建及启动。 在 StandaloneSchedulerBackend  start 代码里除了创建了一个 DriverEndpoint 用于 standalone 模式下用来和 Executor 通信之外还会创建一个 AppClient。 这个 AppClient 会向 Master 注册 Applicatio">
+
+
+
+
+
+
+  <link rel="canonical" href="http://zhuleiblog.com/posts/BigData/2019-07-02-Spark-源码分析（四）-Application-的注册.html">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Spark 源码分析（四）: Application 的注册 | 朱磊</title>
+  
+
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?084a44ac8106ee8c8af269853fa68cda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">朱磊</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">select * from life</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签<span class="badge">69</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类<span class="badge">11</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">86</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+    <div class="reading-progress-bar"></div>
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/BigData/2019-07-02-Spark-源码分析（四）-Application-的注册.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="朱磊">
+      <meta itemprop="description" content="stone">
+      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="朱磊">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Spark 源码分析（四）: Application 的注册
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-02 13:56:01" itemprop="dateCreated datePublished" datetime="2019-07-02T13:56:01+08:00">2019-07-02</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/BigData/" itemprop="url" rel="index"><span itemprop="name">BigData</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>在前面一篇文章中分析到了 SparkContext 中的 TaskScheduler 创建及启动。</p>
+<p>在 StandaloneSchedulerBackend  start 代码里除了创建了一个 DriverEndpoint 用于 standalone 模式下用来和 Executor 通信之外还会创建一个 AppClient。</p>
+<p>这个 AppClient 会向 Master 注册 Application，然后 Master 会通过 Application 的信息为它分配 Worker。</p>
+<p>创建这个 AppClient 对象之前会去获取一些必要的参数。</p>
+<a id="more"></a>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 拿到 Driver RpcEndpoint 的地址</span></span><br><span class="line">val driverUrl = RpcEndpointAddress(</span><br><span class="line">    sc.conf.get(<span class="string">"spark.driver.host"</span>),</span><br><span class="line">    sc.conf.get(<span class="string">"spark.driver.port"</span>).toInt,</span><br><span class="line">    CoarseGrainedSchedulerBackend.ENDPOINT_NAME).toString</span><br><span class="line">  <span class="comment">// 一些启动参数</span></span><br><span class="line">  val args = Seq(</span><br><span class="line">    <span class="string">"--driver-url"</span>, driverUrl,</span><br><span class="line">    <span class="string">"--executor-id"</span>, <span class="string">"&#123;&#123;EXECUTOR_ID&#125;&#125;"</span>,</span><br><span class="line">    <span class="string">"--hostname"</span>, <span class="string">"&#123;&#123;HOSTNAME&#125;&#125;"</span>,</span><br><span class="line">    <span class="string">"--cores"</span>, <span class="string">"&#123;&#123;CORES&#125;&#125;"</span>,</span><br><span class="line">    <span class="string">"--app-id"</span>, <span class="string">"&#123;&#123;APP_ID&#125;&#125;"</span>,</span><br><span class="line">    <span class="string">"--worker-url"</span>, <span class="string">"&#123;&#123;WORKER_URL&#125;&#125;"</span>)</span><br><span class="line">  <span class="comment">// executor 额外的 java 选项</span></span><br><span class="line">  val extraJavaOpts = sc.conf.getOption(<span class="string">"spark.executor.extraJavaOptions"</span>)</span><br><span class="line">    .map(Utils.splitCommandString).getOrElse(Seq.empty)</span><br><span class="line">  <span class="comment">// executor 额外的环境变量</span></span><br><span class="line">  val classPathEntries = sc.conf.getOption(<span class="string">"spark.executor.extraClassPath"</span>)</span><br><span class="line">    .map(_.split(java.io.File.pathSeparator).toSeq).getOrElse(Nil)</span><br><span class="line">  <span class="comment">// executor 额外的依赖</span></span><br><span class="line">  val libraryPathEntries = sc.conf.getOption(<span class="string">"spark.executor.extraLibraryPath"</span>)</span><br><span class="line">    .map(_.split(java.io.File.pathSeparator).toSeq).getOrElse(Nil)</span><br><span class="line">    </span><br><span class="line"> 	val testingClassPath =</span><br><span class="line">    <span class="keyword">if</span> (sys.props.contains(<span class="string">"spark.testing"</span>)) &#123;</span><br><span class="line">      sys.props(<span class="string">"java.class.path"</span>).split(java.io.File.pathSeparator).toSeq</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      Nil</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Start executors with a few necessary configs for registering with the scheduler</span></span><br><span class="line">  val sparkJavaOpts = Utils.sparkJavaOpts(conf, SparkConf.isExecutorStartupConf)</span><br><span class="line">  val javaOpts = sparkJavaOpts ++ extraJavaOpts</span><br><span class="line">  <span class="comment">// 将上面的那些信息封装成一个 command 对象</span></span><br><span class="line">  val command = Command(<span class="string">"org.apache.spark.executor.CoarseGrainedExecutorBackend"</span>,</span><br><span class="line">    args, sc.executorEnvs, classPathEntries ++ testingClassPath, libraryPathEntries, javaOpts)</span><br><span class="line">  <span class="comment">// 获取 application UI 的地址</span></span><br><span class="line">  val appUIAddress = sc.ui.map(_.appUIAddress).getOrElse(<span class="string">""</span>)</span><br><span class="line">  <span class="comment">// 获取 executor 配置的 core 数量</span></span><br><span class="line">  val coresPerExecutor = conf.getOption(<span class="string">"spark.executor.cores"</span>).map(_.toInt)</span><br></pre></td></tr></table></figure>
+<p>然后用上面的这些参数结合 SparkContext 中的一些数据封装一个 ApplicationDescription 对象，这对象里封装了一些信息，可以看看。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span>[spark] <span class="function"><span class="keyword">case</span> class <span class="title">ApplicationDescription</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    name: String,// 名字</span></span></span><br><span class="line"><span class="function"><span class="params">    maxCores: Option[Int],// 最多使用的 core 数量</span></span></span><br><span class="line"><span class="function"><span class="params">    memoryPerExecutorMB: Int,// 每个 Executor 分配的内存</span></span></span><br><span class="line"><span class="function"><span class="params">    command: Command,// 启动命令</span></span></span><br><span class="line"><span class="function"><span class="params">    appUiUrl: String,// application 的 UI Url 地址</span></span></span><br><span class="line"><span class="function"><span class="params">    eventLogDir: Option[URI] = None,// event 日志目录</span></span></span><br><span class="line"><span class="function"><span class="params">    // <span class="keyword">short</span> name of compression codec used when writing event logs, <span class="keyword">if</span> any (e.g. lzf)</span></span></span><br><span class="line"><span class="function">    eventLogCodec: Option[String] </span>= None,</span><br><span class="line">    coresPerExecutor: Option[Int] = None,</span><br><span class="line">    <span class="comment">// number of executors this application wants to start with,</span></span><br><span class="line">    <span class="comment">// only used if dynamic allocation is enabled</span></span><br><span class="line">    initialExecutorLimit: Option[Int] = None,</span><br><span class="line">    user: String = System.getProperty(<span class="string">"user.name"</span>, <span class="string">"&lt;unknown&gt;"</span>)) &#123;</span><br><span class="line"></span><br><span class="line">  override def toString: String = <span class="string">"ApplicationDescription("</span> + name + <span class="string">")"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>封装好 ApplicationDescription 对象之后，根据这个对象创建一个 StandaloneAppClient 对象，然后调用 StandaloneAppClient 对象的 start 方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 封装成一个 AppclientDescription 对象	</span></span><br><span class="line">val appDesc = <span class="keyword">new</span> ApplicationDescription(sc.appName, maxCores, sc.executorMemory, command,</span><br><span class="line">      appUIAddress, sc.eventLogDir, sc.eventLogCodec, coresPerExecutor, initialExecutorLimit)</span><br><span class="line">  <span class="comment">// 创建 StandaloneAppClient 对象</span></span><br><span class="line">    client = <span class="keyword">new</span> StandaloneAppClient(sc.env.rpcEnv, masters, appDesc, <span class="keyword">this</span>, conf)</span><br><span class="line">  <span class="comment">// 调用 StandaloneAppClient 的 start 方法</span></span><br><span class="line">    client.start()</span><br><span class="line">    launcherBackend.setState(SparkAppHandle.State.SUBMITTED)</span><br><span class="line">  <span class="comment">// 等待注册状态的更新</span></span><br><span class="line">    waitForRegistration()</span><br><span class="line">    launcherBackend.setState(SparkAppHandle.State.RUNNING)</span><br></pre></td></tr></table></figure>
+<p>StandaloneAppClient 的 start 方法会去创建并注册一个 ClientEndpoint 用来向 master 注册 Application。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">def <span class="title">start</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Just launch an rpcEndpoint; it will call back into the listener.</span></span><br><span class="line">    endpoint.set(rpcEnv.setupEndpoint(<span class="string">"AppClient"</span>, <span class="keyword">new</span> ClientEndpoint(rpcEnv)))</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>ClientEndPoint 是一个 RpcEndpoint，在初始化的时候会去调用其 onstart 方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">override def <span class="title">onStart</span><span class="params">()</span>: Unit </span>= &#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 向 master 注册</span></span><br><span class="line">        registerWithMaster(<span class="number">1</span>)</span><br><span class="line">      &#125; <span class="keyword">catch</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> e: Exception =&gt;</span><br><span class="line">          logWarning(<span class="string">"Failed to connect to master"</span>, e)</span><br><span class="line">          markDisconnected()</span><br><span class="line">          stop()</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>registerWithMaster 方法实际上会去调用 tryRegisterAllMasters 方法，向所有的 Master 去注册。</p>
+<p>在 Spark 中，Master 可能会是高可靠的 (HA)，这种情况会有可能有多个 Master，不过只有一个 Master 处于 alive 状态，其它处于 standby 状态。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 向所有的 master 进行一步注册，将会一直调用 tryRegisterAllMasters 方法进行注册，知道超出注册时间</span></span><br><span class="line"><span class="comment">* 当成功连接到 master ，所有调度的工作和 Futures 都会被取消</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> def <span class="title">registerWithMaster</span><span class="params">(nthRetry: Int)</span> </span>&#123;</span><br><span class="line">  		<span class="comment">// 实际上调用了 tryRegisterAllMasters ，想所有 master 进行注册</span></span><br><span class="line">      registerMasterFutures.set(tryRegisterAllMasters())</span><br><span class="line">      registrationRetryTimer.set(registrationRetryThread.schedule(<span class="keyword">new</span> Runnable &#123;</span><br><span class="line">        <span class="function">override def <span class="title">run</span><span class="params">()</span>: Unit </span>= &#123;</span><br><span class="line">          <span class="keyword">if</span> (registered.get) &#123;</span><br><span class="line">            registerMasterFutures.get.foreach(_.cancel(<span class="keyword">true</span>))</span><br><span class="line">            registerMasterThreadPool.shutdownNow()</span><br><span class="line">          &#125; <span class="keyword">else</span> <span class="keyword">if</span> (nthRetry &gt;= REGISTRATION_RETRIES) &#123;</span><br><span class="line">            markDead(<span class="string">"All masters are unresponsive! Giving up."</span>)</span><br><span class="line">          &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            registerMasterFutures.get.foreach(_.cancel(<span class="keyword">true</span>))</span><br><span class="line">            registerWithMaster(nthRetry + <span class="number">1</span>)</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;, REGISTRATION_TIMEOUT_SECONDS, TimeUnit.SECONDS))</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>tryRegisterAllMasters 方法的调用，向所有 master 注册。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 异步向所有 master 注册，返回一个 [Future] 的数组用来以后取消</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> def <span class="title">tryRegisterAllMasters</span><span class="params">()</span>: Array[JFuture[_]] </span>= &#123;</span><br><span class="line">      <span class="keyword">for</span> (masterAddress &lt;- masterRpcAddresses) yield &#123;</span><br><span class="line">        registerMasterThreadPool.submit(<span class="keyword">new</span> Runnable &#123;</span><br><span class="line">          <span class="function">override def <span class="title">run</span><span class="params">()</span>: Unit </span>= <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (registered.get) &#123;</span><br><span class="line">              <span class="keyword">return</span></span><br><span class="line">            &#125;</span><br><span class="line">            logInfo(<span class="string">"Connecting to master "</span> + masterAddress.toSparkURL + <span class="string">"..."</span>)</span><br><span class="line">            val masterRef = rpcEnv.setupEndpointRef(masterAddress, Master.ENDPOINT_NAME)</span><br><span class="line">            <span class="comment">// 向 master 发送注册消息</span></span><br><span class="line">            masterRef.send(RegisterApplication(appDescription, self))</span><br><span class="line">          &#125; <span class="keyword">catch</span> &#123;</span><br><span class="line">            <span class="keyword">case</span> ie: InterruptedException =&gt; <span class="comment">// Cancelled</span></span><br><span class="line">            <span class="function"><span class="keyword">case</span> <span class="title">NonFatal</span><span class="params">(e)</span> </span>=&gt; logWarning(s<span class="string">"Failed to connect to master $masterAddress"</span>, e)</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>向 master 发送注册消息后，master 收到消息后注册完 application 之后会回复一条消息。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">case</span> <span class="title">RegisterApplication</span><span class="params">(description, driver)</span> </span>=&gt;</span><br><span class="line">      <span class="comment">// TODO Prevent repeated registrations from some driver</span></span><br><span class="line">      <span class="keyword">if</span> (state == RecoveryState.STANDBY) &#123;</span><br><span class="line">        <span class="comment">// ignore, don't send response</span></span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        logInfo(<span class="string">"Registering app "</span> + description.name)</span><br><span class="line">        val app = createApplication(description, driver)</span><br><span class="line">        <span class="comment">// 将 master 中内存中等待调度的 app 队列更新，</span></span><br><span class="line">        registerApplication(app)</span><br><span class="line">        logInfo(<span class="string">"Registered app "</span> + description.name + <span class="string">" with ID "</span> + app.id)</span><br><span class="line">        persistenceEngine.addApplication(app)</span><br><span class="line">        <span class="comment">// 向 driver 回复一条注册 Application 的处理结果的消息</span></span><br><span class="line">        driver.send(RegisteredApplication(app.id, self))</span><br><span class="line">        <span class="comment">// 调度资源</span></span><br><span class="line">        schedule()</span><br><span class="line">      &#125;</span><br></pre></td></tr></table></figure>
+<p>master 调用 shedule 方法，这个方法做两件事，一个是给等待调度的 driver 分配资源，一个是给等待调度的 application 分配资源去启动 executor。</p>
+<p>在给等待调度的 application 分配资源的时候最后会走到 launchExecutor 方法，这个方法会通过给符合要求的 worker 发送启动 executor 的消息去启动 executor。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> def <span class="title">launchExecutor</span><span class="params">(worker: WorkerInfo, exec: ExecutorDesc)</span>: Unit </span>= &#123;</span><br><span class="line">    logInfo(<span class="string">"Launching executor "</span> + exec.fullId + <span class="string">" on worker "</span> + worker.id)</span><br><span class="line">    worker.addExecutor(exec)</span><br><span class="line">    <span class="comment">// 给 worker 发送 LaunchExecutor 消息</span></span><br><span class="line">    worker.endpoint.send(LaunchExecutor(masterUrl,</span><br><span class="line">      exec.application.id, exec.id, exec.application.desc, exec.cores, exec.memory))</span><br><span class="line">    exec.application.driver.send(</span><br><span class="line">      ExecutorAdded(exec.id, worker.id, worker.hostPort, exec.cores, exec.memory))</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>在 worker 收到启动 Executor 的消息后会去根据消息去启动对应的 Executor。</p>
+<p>至此，Application 的注册就完成了。</p>
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Spark/" rel="tag"># Spark</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/BigData/2019-07-02-Spark-源码分析（三）-SparkContext-初始化之-TaskScheduler-创建与启动.html" rel="next" title="Spark 源码分析（三）: SparkContext 初始化之 TaskScheduler 创建与启动">
+                <i class="fa fa-chevron-left"></i> Spark 源码分析（三）: SparkContext 初始化之 TaskScheduler 创建与启动
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/BigData/2019-07-02-Spark-源码分析（五）-Executor-启动.html" rel="prev" title="Spark 源码分析（五）: Executor 启动">
+                Spark 源码分析（五）: Executor 启动 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="http://stonezhu.top/avatar.jpg" alt="朱磊">
+            
+              <p class="site-author-name" itemprop="name">朱磊</p>
+              <p class="site-description motion-element" itemprop="description">stone</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">86</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">11</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">69</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/Zzz468005600" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://zhulei.blog.csdn.net" target="_blank" title="CSDN"><i class="fa fa-fw fa-globe"></i>CSDN</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://www.jianshu.com/u/9f869537b90e" target="_blank" title="简书"><i class="fa fa-fw fa-heartbeat"></i>简书</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://juejin.im/user/5b246031e51d4558d43fb44d/posts" target="_blank" title="掘金"><i class="fa fa-fw fa-spinner"></i>掘金</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://blog.luliangdev.cn" title="LuLiangDev" target="_blank">LuLiangDev</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">朱磊</span>
+
+  
+
+  
+</div>
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+  
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/reading_progress/reading_progress.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

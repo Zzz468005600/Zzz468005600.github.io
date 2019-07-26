@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico?v=6.3.0">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+  <meta name="description" content="本文转自：Spark内存管理详解（下）——内存管理 本文最初由IBM developerWorks中国网站发表，其链接为Apache Spark内存管理详解在这里，正文内容分为上下两篇来阐述，这是下篇，上一篇请移步博客列表的上一篇文章。 123456Spark内存管理详解（上）——内存分配  1. 堆内和堆外内存  2. 内存空间分配Spark内存管理详解（下）——内存管理  3. 存储内存管理">
+<meta name="keywords" content="Spark">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark 内存管理详解（下）：内存管理">
+<meta property="og:url" content="http://zhuleiblog.com/posts/BigData/2019-07-10-Spark-内存管理详解（下）：内存管理.html">
+<meta property="og:site_name" content="朱磊">
+<meta property="og:description" content="本文转自：Spark内存管理详解（下）——内存管理 本文最初由IBM developerWorks中国网站发表，其链接为Apache Spark内存管理详解在这里，正文内容分为上下两篇来阐述，这是下篇，上一篇请移步博客列表的上一篇文章。 123456Spark内存管理详解（上）——内存分配  1. 堆内和堆外内存  2. 内存空间分配Spark内存管理详解（下）——内存管理  3. 存储内存管理">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://stonezhu.top/blog/19071008.png">
+<meta property="og:image" content="http://stonezhu.top/blog/19071009.png">
+<meta property="og:updated_time" content="2019-07-10T06:18:28.560Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spark 内存管理详解（下）：内存管理">
+<meta name="twitter:description" content="本文转自：Spark内存管理详解（下）——内存管理 本文最初由IBM developerWorks中国网站发表，其链接为Apache Spark内存管理详解在这里，正文内容分为上下两篇来阐述，这是下篇，上一篇请移步博客列表的上一篇文章。 123456Spark内存管理详解（上）——内存分配  1. 堆内和堆外内存  2. 内存空间分配Spark内存管理详解（下）——内存管理  3. 存储内存管理">
+<meta name="twitter:image" content="http://stonezhu.top/blog/19071008.png">
+
+
+
+
+
+
+  <link rel="canonical" href="http://zhuleiblog.com/posts/BigData/2019-07-10-Spark-内存管理详解（下）：内存管理.html">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Spark 内存管理详解（下）：内存管理 | 朱磊</title>
+  
+
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?084a44ac8106ee8c8af269853fa68cda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">朱磊</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">select * from life</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签<span class="badge">69</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类<span class="badge">11</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">86</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+    <div class="reading-progress-bar"></div>
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/BigData/2019-07-10-Spark-内存管理详解（下）：内存管理.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="朱磊">
+      <meta itemprop="description" content="stone">
+      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="朱磊">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Spark 内存管理详解（下）：内存管理
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-10 14:12:37" itemprop="dateCreated datePublished" datetime="2019-07-10T14:12:37+08:00">2019-07-10</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/BigData/" itemprop="url" rel="index"><span itemprop="name">BigData</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>本文转自：<a href="https://www.jianshu.com/p/58288b862030" target="_blank" rel="noopener">Spark内存管理详解（下）——内存管理</a></p>
+<p>本文最初由<a href="https://link.jianshu.com/?t=https://www.ibm.com/developerworks/cn" target="_blank" rel="noopener">IBM developerWorks</a>中国网站发表，其链接为<a href="https://link.jianshu.com/?t=https://www.ibm.com/developerworks/cn/analytics/library/ba-cn-apache-spark-memory-management/index.html" target="_blank" rel="noopener">Apache Spark内存管理详解</a><br>在这里，正文内容分为上下两篇来阐述，这是下篇，上一篇请移步博客列表的上一篇文章。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Spark内存管理详解（上）——内存分配</span><br><span class="line">  1. 堆内和堆外内存</span><br><span class="line">  2. 内存空间分配</span><br><span class="line">Spark内存管理详解（下）——内存管理</span><br><span class="line">  3. 存储内存管理</span><br><span class="line">  4. 执行内存管理</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+<h4 id="3-存储内存管理"><a href="#3-存储内存管理" class="headerlink" title="3. 存储内存管理"></a>3. 存储内存管理</h4><h5 id="3-1-RDD的持久化机制"><a href="#3-1-RDD的持久化机制" class="headerlink" title="3.1 RDD的持久化机制"></a>3.1 RDD的持久化机制</h5><p>弹性分布式数据集（RDD）作为Spark最根本的数据抽象，是只读的分区记录（Partition）的集合，只能基于在稳定物理存储中的数据集上创建，或者在其他已有的RDD上执行转换（Transformation）操作产生一个新的RDD。转换后的RDD与原始的RDD之间产生的依赖关系，构成了血统（Lineage）。凭借血统，Spark保证了每一个RDD都可以被重新恢复。但RDD的所有转换都是惰性的，即只有当一个返回结果给Driver的行动（Action）发生时，Spark才会创建任务读取RDD，然后真正触发转换的执行。</p>
+<p>Task在启动之初读取一个分区时，会先判断这个分区是否已经被持久化，如果没有则需要检查Checkpoint或按照血统重新计算。所以如果一个RDD上要执行多次行动，可以在第一次行动中使用persist或cache方法，在内存或磁盘中持久化或缓存这个RDD，从而在后面的行动时提升计算速度。事实上，cache方法是使用默认的MEMORY_ONLY的存储级别将RDD持久化到内存，故缓存是一种特殊的持久化。<strong>堆内和堆外存储内存的设计，便可以对缓存RDD时使用的内存做统一的规划和管理</strong>（存储内存的其他应用场景，如缓存broadcast数据，暂时不在本文的讨论范围之内）。</p>
+<p>RDD的持久化由Spark的Storage模块[1]负责，实现了RDD与物理存储的解耦合。Storage模块负责管理Spark在计算过程中产生的数据，将那些在内存或磁盘、在本地或远程存取数据的功能封装了起来。在具体实现时Driver端和Executor端的Storage模块构成了主从式的架构，即Driver端的BlockManager为Master，Executor端的BlockManager为Slave。Storage模块在逻辑上以Block为基本存储单位，RDD的每个Partition经过处理后唯一对应一个Block（BlockId的格式为<code>rdd_RDD-ID_PARTITION-ID</code>）。Master负责整个Spark应用程序的Block的元数据信息的管理和维护，而Slave需要将Block的更新等状态上报到Master，同时接收Master的命令，例如新增或删除一个RDD。</p>
+<p><img src="http://stonezhu.top/blog/19071008.png" alt="图1 Storage模块示意图"></p>
+<p>在对RDD持久化时，Spark规定了MEMORY_ONLY、MEMORY_AND_DISK等7种不同的<a href="https://link.jianshu.com/?t=http://spark.apache.org/docs/latest/programming-guide.html#rdd-persistence" target="_blank" rel="noopener">存储级别</a>，而存储级别是以下5个变量的组合:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">StorageLevel</span> <span class="title">private</span>(</span></span><br><span class="line">    private var _useDisk: Boolean, //磁盘</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">var</span> _useMemory: Boolean, <span class="comment">//这里其实是指堆内内存</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">var</span> _useOffHeap: Boolean, <span class="comment">//堆外内存</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">var</span> _deserialized: Boolean, <span class="comment">//是否为非序列化</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">var</span> _replication: Int = <span class="number">1</span> <span class="comment">//副本个数</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p>通过对数据结构的分析，可以看出存储级别从三个维度定义了RDD的Partition（同时也就是Block）的存储方式：</p>
+<ul>
+<li>存储位置：磁盘／堆内内存／堆外内存。如MEMORY_AND_DISK是同时在磁盘和堆内内存上存储，实现了冗余备份。OFF_HEAP则是只在堆外内存存储，目前选择堆外内存时不能同时存储到其他位置。</li>
+<li>存储形式：Block缓存到存储内存后，是否为非序列化的形式。如MEMORY_ONLY是非序列化方式存储，OFF_HEAP是序列化方式存储。</li>
+<li>副本数量：大于1时需要远程冗余备份到其他节点。如DISK_ONLY_2需要远程备份1个副本。</li>
+</ul>
+<h5 id="3-2-RDD缓存的过程"><a href="#3-2-RDD缓存的过程" class="headerlink" title="3.2 RDD缓存的过程"></a>3.2 RDD缓存的过程</h5><p>RDD在缓存到存储内存之前，Partition中的数据一般以迭代器（<a href="https://link.jianshu.com?t=http://www.scala-lang.org/docu/files/collections-api/collections_43.html" target="_blank" rel="noopener">Iterator</a>）的数据结构来访问，这是Scala语言中一种遍历数据集合的方法。通过Iterator可以获取分区中每一条序列化或者非序列化的数据项(Record)，这些Record的对象实例在逻辑上占用了JVM堆内内存的other部分的空间，同一Partition的不同Record的空间并不连续。</p>
+<p>RDD在缓存到存储内存之后，Partition被转换成Block，Record在堆内或堆外存储内存中占用一块连续的空间。<strong>将Partition由不连续的存储空间转换为连续存储空间的过程，Spark称之为“展开”（Unroll）</strong>。Block有序列化和非序列化两种存储格式，具体以哪种方式取决于该RDD的存储级别。非序列化的Block以一种DeserializedMemoryEntry的数据结构定义，用一个数组存储所有的Java对象，序列化的Block则以SerializedMemoryEntry的数据结构定义，用字节缓冲区（ByteBuffer）来存储二进制数据。每个Executor的Storage模块用一个链式Map结构（LinkedHashMap）来管理堆内和堆外存储内存中所有的Block对象的实例[6]，对这个LinkedHashMap新增和删除间接记录了内存的申请和释放。</p>
+<p>因为不能保证存储空间可以一次容纳Iterator中的所有数据，当前的计算任务在Unroll时要向MemoryManager申请足够的Unroll空间来临时占位，空间不足则Unroll失败，空间足够时可以继续进行。对于序列化的Partition，其所需的Unroll空间可以直接累加计算，一次申请。而非序列化的Partition则要在遍历Record的过程中依次申请，即每读取一条Record，采样估算其所需的Unroll空间并进行申请，空间不足时可以中断，释放已占用的Unroll空间。如果最终Unroll成功，当前Partition所占用的Unroll空间被转换为正常的缓存RDD的存储空间，如下图2所示。</p>
+<p><img src="http://stonezhu.top/blog/19071009.png" alt="图2 Spark Unroll示意图"></p>
+<p>在上一篇的图3和图5中可以看到，在静态内存管理时，Spark在存储内存中专门划分了一块Unroll空间，其大小是固定的，统一内存管理时则没有对Unroll空间进行特别区分，当存储空间不足是会根据动态占用机制进行处理。</p>
+<h5 id="3-3-淘汰和落盘"><a href="#3-3-淘汰和落盘" class="headerlink" title="3.3 淘汰和落盘"></a>3.3 淘汰和落盘</h5><p>由于同一个Executor的所有的计算任务共享有限的存储内存空间，当有新的Block需要缓存但是剩余空间不足且无法动态占用时，就要对LinkedHashMap中的旧Block进行淘汰（Eviction)，而被淘汰的Block如果其存储级别中同时包含存储到磁盘的要求，则要对其进行落盘（Drop），否则直接删除该Block。<br> 存储内存的淘汰规则为：</p>
+<ul>
+<li>被淘汰的旧Block要与新Block的MemoryMode相同，即同属于堆外或堆内内存</li>
+<li>新旧Block不能属于同一个RDD，避免循环淘汰</li>
+<li>旧Block所属RDD不能处于被读状态，避免引发一致性问题</li>
+<li>遍历LinkedHashMap中Block，按照最近最少使用（LRU）的顺序淘汰，直到满足新Block所需的空间。其中LRU是LinkedHashMap的特性。</li>
+</ul>
+<p>落盘的流程则比较简单，如果其存储级别符合<code>_useDisk</code>为true的条件，再根据其<code>_deserialized</code>判断是否是非序列化的形式，若是则对其进行序列化，最后将数据存储到磁盘，在Storage模块中更新其信息。</p>
+<h4 id="4-执行内存管理"><a href="#4-执行内存管理" class="headerlink" title="4. 执行内存管理"></a>4. 执行内存管理</h4><h5 id="4-1-多任务间的分配"><a href="#4-1-多任务间的分配" class="headerlink" title="4.1 多任务间的分配"></a>4.1 多任务间的分配</h5><p>Executor内运行的任务同样共享执行内存，Spark用一个HashMap结构保存了任务到内存耗费的映射。每个任务可占用的执行内存大小的范围为<code>1/2N ~ 1/N</code>，其中N为当前Executor内正在运行的任务的个数。每个任务在启动之时，要向MemoryManager请求申请最少为1/2N的执行内存，如果不能被满足要求则该任务被阻塞，直到有其他任务释放了足够的执行内存，该任务才可以被唤醒。</p>
+<h5 id="4-2-Shuffle的内存占用"><a href="#4-2-Shuffle的内存占用" class="headerlink" title="4.2 Shuffle的内存占用"></a>4.2 Shuffle的内存占用</h5><p>执行内存主要用来存储任务在执行Shuffle时占用的内存，Shuffle是按照一定规则对RDD数据重新分区的过程，我们来看Shuffle的Write和Read两阶段对执行内存的使用：</p>
+<ul>
+<li>Shuffle Write <ul>
+<li>若在map端选择普通的排序方式，会采用ExternalSorter进行外排，在内存中存储数据时主要占用堆内执行空间。</li>
+<li>若在map端选择Tungsten的排序方式，则采用ShuffleExternalSorter直接对以序列化形式存储的数据排序，在内存中存储数据时可以占用堆外或堆内执行空间，取决于用户是否开启了堆外内存以及堆外执行内存是否足够。</li>
+</ul>
+</li>
+<li>Shuffle Read <ul>
+<li>在对reduce端的数据进行聚合时，要将数据交给Aggregator处理，在内存中存储数据时占用堆内执行空间。</li>
+<li>如果需要进行最终结果排序，则要将再次将数据交给ExternalSorter处理，占用堆内执行空间。</li>
+</ul>
+</li>
+</ul>
+<p>在ExternalSorter和Aggregator中，Spark会使用一种叫AppendOnlyMap的哈希表在堆内执行内存中存储数据，但在Shuffle过程中所有数据并不能都保存到该哈希表中，当这个哈希表占用的内存会进行周期性地采样估算，当其大到一定程度，无法再从MemoryManager申请到新的执行内存时，Spark就会将其全部内容存储到磁盘文件中，这个过程被称为溢存(Spill)，溢存到磁盘的文件最后会被归并(Merge)。</p>
+<p>Shuffle Write阶段中用到的Tungsten是Databricks公司提出的对Spark优化内存和CPU使用的计划[4]，解决了一些JVM在性能上的限制和弊端。Spark会根据Shuffle的情况来自动选择是否采用Tungsten排序。Tungsten采用的页式内存管理机制建立在MemoryManager之上，即Tungsten对执行内存的使用进行了一步的抽象，这样在Shuffle过程中无需关心数据具体存储在堆内还是堆外。每个内存页用一个MemoryBlock来定义，并用<code>Object obj</code>和<code>long offset</code>这两个变量统一标识一个内存页在系统内存中的地址。堆内的MemoryBlock是以long型数组的形式分配的内存，其<code>obj</code>的值为是这个数组的对象引用，<code>offset</code>是long型数组的在JVM中的初始偏移地址，两者配合使用可以定位这个数组在堆内的绝对地址；堆外的MemoryBlock是直接申请到的内存块，其<code>obj</code>为null，<code>offset</code>是这个内存块在系统内存中的64位绝对地址。Spark用MemoryBlock巧妙地将堆内和堆外内存页统一抽象封装，并用页表(pageTable)管理每个Task申请到的内存页。</p>
+<p>Tungsten页式管理下的所有内存用64位的逻辑地址表示，由页号和页内偏移量组成：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1. 页号：占13位，唯一标识一个内存页，Spark在申请内存页之前要先申请空闲页号。</span><br><span class="line">2. 页内偏移量：占51位，是在使用内存页存储数据时，数据在页内的偏移地址。</span><br></pre></td></tr></table></figure>
+<p>有了统一的寻址方式，Spark可以用64位逻辑地址的指针定位到堆内或堆外的内存，整个Shuffle Write排序的过程只需要对指针进行排序，并且无需反序列化，整个过程非常高效，对于内存访问效率和CPU使用效率带来了明显的提升[5]。</p>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>Spark的存储内存和执行内存有着截然不同的管理方式：对于存储内存来说，Spark用一个LinkedHashMap来集中管理所有的Block，Block由需要缓存的RDD的Partition转化而成；而对于执行内存，Spark用AppendOnlyMap来存储Shuffle过程中的数据，在Tungsten排序中甚至抽象成为页式内存管理，开辟了全新的JVM内存管理机制。</p>
+<h4 id="结束语"><a href="#结束语" class="headerlink" title="结束语"></a>结束语</h4><p>Spark的内存管理是一套复杂的机制，且Spark的版本更新比较快，笔者水平有限，难免有叙述不清、错误的地方，若读者有好的建议和更深的理解，还望不吝赐教。</p>
+<h4 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h4><ol>
+<li><a href="https://link.jianshu.com?t=https://book.douban.com/subject/26649141/" target="_blank" rel="noopener">《Spark技术内幕：深入解析Spark内核架构于实现原理》——第8章 Storage模块详解</a></li>
+<li><a href="https://link.jianshu.com?t=https://github.com/apache/spark/blob/master/core/src/main/scala/org/apache/spark/storage/StorageLevel.scala" target="_blank" rel="noopener">Spark存储级别的源码</a></li>
+<li><a href="https://www.jianshu.com/p/c83bb237caa8" target="_blank" rel="noopener">Spark Sort Based Shuffle内存分析</a></li>
+<li><a href="https://link.jianshu.com?t=https://databricks.com/blog/2015/04/28/project-tungsten-bringing-spark-closer-to-bare-metal.html" target="_blank" rel="noopener">Project Tungsten: Bringing Apache Spark Closer to Bare Metal</a></li>
+<li><a href="https://www.jianshu.com/p/d328c96aebfd" target="_blank" rel="noopener">Spark Tungsten-sort Based Shuffle 分析</a></li>
+<li><a href="https://link.jianshu.com?t=https://github.com/hustnn/TungstenSecret/tree/master" target="_blank" rel="noopener">探索Spark Tungsten的秘密</a></li>
+<li><a href="https://www.jianshu.com/p/8f9ed2d58a26" target="_blank" rel="noopener">Spark Task 内存管理（on-heap&amp;off-heap）</a></li>
+</ol>
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Spark/" rel="tag"># Spark</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/BigData/2019-07-10-Spark-内存管理详解（上）：内存分配.html" rel="next" title="Spark 内存管理详解（上）：内存分配">
+                <i class="fa fa-chevron-left"></i> Spark 内存管理详解（上）：内存分配
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/Java/2019-07-12-JVM-堆内存模型与-GC-策略.html" rel="prev" title="JVM 堆内存模型与 GC 策略">
+                JVM 堆内存模型与 GC 策略 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="http://stonezhu.top/avatar.jpg" alt="朱磊">
+            
+              <p class="site-author-name" itemprop="name">朱磊</p>
+              <p class="site-description motion-element" itemprop="description">stone</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">86</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">11</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">69</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/Zzz468005600" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://zhulei.blog.csdn.net" target="_blank" title="CSDN"><i class="fa fa-fw fa-globe"></i>CSDN</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://www.jianshu.com/u/9f869537b90e" target="_blank" title="简书"><i class="fa fa-fw fa-heartbeat"></i>简书</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://juejin.im/user/5b246031e51d4558d43fb44d/posts" target="_blank" title="掘金"><i class="fa fa-fw fa-spinner"></i>掘金</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://blog.luliangdev.cn" title="LuLiangDev" target="_blank">LuLiangDev</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-存储内存管理"><span class="nav-text">3. 存储内存管理</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1-RDD的持久化机制"><span class="nav-text">3.1 RDD的持久化机制</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-RDD缓存的过程"><span class="nav-text">3.2 RDD缓存的过程</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-3-淘汰和落盘"><span class="nav-text">3.3 淘汰和落盘</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-执行内存管理"><span class="nav-text">4. 执行内存管理</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#4-1-多任务间的分配"><span class="nav-text">4.1 多任务间的分配</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-2-Shuffle的内存占用"><span class="nav-text">4.2 Shuffle的内存占用</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#小结"><span class="nav-text">小结</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#结束语"><span class="nav-text">结束语</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#参考文献"><span class="nav-text">参考文献</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">朱磊</span>
+
+  
+
+  
+</div>
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+  
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/reading_progress/reading_progress.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

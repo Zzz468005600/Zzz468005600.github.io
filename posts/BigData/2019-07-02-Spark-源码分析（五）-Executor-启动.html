@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico?v=6.3.0">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+  <meta name="description" content="上一篇已经将 Application 注册到了 master 上了，在 master 收到注册消息后会进行一系列操作，最后调用 schedule 方法。 这个 schedule 方法会去做两件事，一件事是给等待调度的 driver 分配资源，另一件事是给等待调度的 application 去分配资源启动 Executor。 给 application 分配资源启动 Executor 的代码最终会调">
+<meta name="keywords" content="Spark">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark 源码分析（五）: Executor 启动">
+<meta property="og:url" content="http://zhuleiblog.com/posts/BigData/2019-07-02-Spark-源码分析（五）-Executor-启动.html">
+<meta property="og:site_name" content="朱磊">
+<meta property="og:description" content="上一篇已经将 Application 注册到了 master 上了，在 master 收到注册消息后会进行一系列操作，最后调用 schedule 方法。 这个 schedule 方法会去做两件事，一件事是给等待调度的 driver 分配资源，另一件事是给等待调度的 application 去分配资源启动 Executor。 给 application 分配资源启动 Executor 的代码最终会调">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-07-02T13:32:35.680Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spark 源码分析（五）: Executor 启动">
+<meta name="twitter:description" content="上一篇已经将 Application 注册到了 master 上了，在 master 收到注册消息后会进行一系列操作，最后调用 schedule 方法。 这个 schedule 方法会去做两件事，一件事是给等待调度的 driver 分配资源，另一件事是给等待调度的 application 去分配资源启动 Executor。 给 application 分配资源启动 Executor 的代码最终会调">
+
+
+
+
+
+
+  <link rel="canonical" href="http://zhuleiblog.com/posts/BigData/2019-07-02-Spark-源码分析（五）-Executor-启动.html">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Spark 源码分析（五）: Executor 启动 | 朱磊</title>
+  
+
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?084a44ac8106ee8c8af269853fa68cda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">朱磊</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">select * from life</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签<span class="badge">69</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类<span class="badge">11</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">86</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+    <div class="reading-progress-bar"></div>
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/BigData/2019-07-02-Spark-源码分析（五）-Executor-启动.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="朱磊">
+      <meta itemprop="description" content="stone">
+      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="朱磊">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Spark 源码分析（五）: Executor 启动
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-02 16:14:09" itemprop="dateCreated datePublished" datetime="2019-07-02T16:14:09+08:00">2019-07-02</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/BigData/" itemprop="url" rel="index"><span itemprop="name">BigData</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>上一篇已经将 Application 注册到了 master 上了，在 master 收到注册消息后会进行一系列操作，最后调用 schedule 方法。</p>
+<p>这个 schedule 方法会去做两件事，一件事是给等待调度的 driver 分配资源，另一件事是给等待调度的 application 去分配资源启动 Executor。</p>
+<p>给 application 分配资源启动 Executor 的代码最终会调用一个方法：launchExecutor（是 Master 中的代码）。</p>
+<p>在 lauchExecutor 方法中会先向 worker 发送 lauchExecutor 消息，然后会向 driver 发送 executor 已经启动的消息。</p>
+<a id="more"></a>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> def <span class="title">launchExecutor</span><span class="params">(worker: WorkerInfo, exec: ExecutorDesc)</span>: Unit </span>= &#123;</span><br><span class="line">    logInfo(<span class="string">"Launching executor "</span> + exec.fullId + <span class="string">" on worker "</span> + worker.id)</span><br><span class="line">    worker.addExecutor(exec)</span><br><span class="line">    <span class="comment">// 向 worker 发送 LaunchExecutor 消息</span></span><br><span class="line">    worker.endpoint.send(LaunchExecutor(masterUrl,</span><br><span class="line">      exec.application.id, exec.id, exec.application.desc, exec.cores, exec.memory))</span><br><span class="line">     <span class="comment">// 向 driver 发送 ExecutorAdded 的消息</span></span><br><span class="line">    exec.application.driver.send(</span><br><span class="line">      ExecutorAdded(exec.id, worker.id, worker.hostPort, exec.cores, exec.memory))</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>下面看 worker 端收到 launchExecutor 消息后是怎么处理的。</p>
+<p>同样的在 receive 的模式匹配中找到该消息的匹配，可以看到做了这些事情：</p>
+<p>1，先判断发消息的 master 是否是 alive 状态，如果是才会继续执行；</p>
+<p>2，创建 executor 的工作目录和本地临时目录；</p>
+<p>3，将 master 发来的消息封装为 ExecutorRunner 对象，然后调用其 start 方法启动线程；</p>
+<p>4，向 master 发送消息，告诉当前 executor 的状态；</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 模式匹配，是 LaunchExecutor 消息</span></span><br><span class="line"><span class="function"><span class="keyword">case</span> <span class="title">LaunchExecutor</span><span class="params">(masterUrl, appId, execId, appDesc, cores_, memory_)</span> </span>=&gt;</span><br><span class="line">  		<span class="comment">// 如果发送消息的 master 不是 active 的则不执行    </span></span><br><span class="line">  		<span class="keyword">if</span> (masterUrl != activeMasterUrl) &#123;</span><br><span class="line">        logWarning(<span class="string">"Invalid Master ("</span> + masterUrl + <span class="string">") attempted to launch executor."</span>)</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          logInfo(<span class="string">"Asked to launch executor %s/%d for %s"</span>.format(appId, execId, appDesc.name))</span><br><span class="line"></span><br><span class="line">          <span class="comment">// 创建 executor 的工作目录</span></span><br><span class="line">          val executorDir = <span class="keyword">new</span> File(workDir, appId + <span class="string">"/"</span> + execId)</span><br><span class="line">          <span class="keyword">if</span> (!executorDir.mkdirs()) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IOException(<span class="string">"Failed to create directory "</span> + executorDir)</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          <span class="comment">// 通过 SPARK_EXECUTOR_DIRS 环境变量配置创建 Executor 的本地目录</span></span><br><span class="line">          <span class="comment">// Worker 会在当前 application 执行结束后删除这个目录</span></span><br><span class="line">          val appLocalDirs = appDirectories.getOrElse(appId,</span><br><span class="line">            Utils.getOrCreateLocalRootDirs(conf).map &#123; dir =&gt;</span><br><span class="line">              val appDir = Utils.createDirectory(dir, namePrefix = <span class="string">"executor"</span>)</span><br><span class="line">              Utils.chmod700(appDir)</span><br><span class="line">              appDir.getAbsolutePath()</span><br><span class="line">            &#125;.toSeq)</span><br><span class="line">          appDirectories(appId) = appLocalDirs</span><br><span class="line">          <span class="comment">// 将接收到的 application 中 Executor 的相关信息封装为一个 ExecutorRunner 对象</span></span><br><span class="line">          val manager = <span class="keyword">new</span> ExecutorRunner(</span><br><span class="line">            appId,</span><br><span class="line">            execId,</span><br><span class="line">            appDesc.copy(command = Worker.maybeUpdateSSLSettings(appDesc.command, conf)),</span><br><span class="line">            cores_,</span><br><span class="line">            memory_,</span><br><span class="line">            self,</span><br><span class="line">            workerId,</span><br><span class="line">            host,</span><br><span class="line">            webUi.boundPort,</span><br><span class="line">            publicAddress,</span><br><span class="line">            sparkHome,</span><br><span class="line">            executorDir,</span><br><span class="line">            workerUri,</span><br><span class="line">            conf,</span><br><span class="line">            appLocalDirs, ExecutorState.RUNNING)</span><br><span class="line">          executors(appId + <span class="string">"/"</span> + execId) = manager</span><br><span class="line">          <span class="comment">// 启动这个线程</span></span><br><span class="line">          manager.start()</span><br><span class="line">          <span class="comment">// 更新 worker 的资源利用情况</span></span><br><span class="line">          coresUsed += cores_</span><br><span class="line">          memoryUsed += memory_</span><br><span class="line">          <span class="comment">// 给 master 回复消息</span></span><br><span class="line">          sendToMaster(ExecutorStateChanged(appId, execId, manager.state, None, None))</span><br><span class="line">        &#125; <span class="keyword">catch</span> &#123;</span><br><span class="line">          <span class="keyword">case</span> e: Exception =&gt;</span><br><span class="line">            logError(s<span class="string">"Failed to launch executor $appId/$execId for $&#123;appDesc.name&#125;."</span>, e)</span><br><span class="line">            <span class="keyword">if</span> (executors.contains(appId + <span class="string">"/"</span> + execId)) &#123;</span><br><span class="line">              executors(appId + <span class="string">"/"</span> + execId).kill()</span><br><span class="line">              executors -= appId + <span class="string">"/"</span> + execId</span><br><span class="line">            &#125;</span><br><span class="line">            sendToMaster(ExecutorStateChanged(appId, execId, ExecutorState.FAILED,</span><br><span class="line">              Some(e.toString), None))</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br></pre></td></tr></table></figure>
+<p>这里主要看 ExecutorRunner 调用 start 之后做了什么。</p>
+<p>实际上是创建了一个线程，线程运行时会去执行 fetchAndRunExecutor 这个方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span>[worker] <span class="function">def <span class="title">start</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  	<span class="comment">// 创建线程</span></span><br><span class="line">    workerThread = <span class="keyword">new</span> Thread(<span class="string">"ExecutorRunner for "</span> + fullId) &#123;</span><br><span class="line">      <span class="function">override def <span class="title">run</span><span class="params">()</span> </span>&#123; fetchAndRunExecutor() &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  	<span class="comment">// 启动线程</span></span><br><span class="line">    workerThread.start()</span><br><span class="line">    <span class="comment">// Shutdown hook that kills actors on shutdown.</span></span><br><span class="line">    shutdownHook = ShutdownHookManager.addShutdownHook &#123; () =&gt;</span><br><span class="line">      <span class="comment">// It's possible that we arrive here before calling `fetchAndRunExecutor`, then `state` will</span></span><br><span class="line">      <span class="comment">// be `ExecutorState.RUNNING`. In this case, we should set `state` to `FAILED`.</span></span><br><span class="line">      <span class="keyword">if</span> (state == ExecutorState.RUNNING) &#123;</span><br><span class="line">        state = ExecutorState.FAILED</span><br><span class="line">      &#125;</span><br><span class="line">      killProcess(Some(<span class="string">"Worker shutting down"</span>)) &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>fetchAndRunExecutor 这个方法将接收到的信息做如下一些事情：</p>
+<p>1，创建 ProcessBuilder，准备执行本地命令；</p>
+<p>2，为 ProcessBuilder 创建执行目录，设置环境变量；</p>
+<p>3，启动 ProcessBuilder，生成 Executor 进程，这个进程的名称一般为：CoarseGrainedExecutorBackend；</p>
+<p>4，重定向输出流和错误文件流；</p>
+<p>5，等待获取 executor 的退出码，然后发送给 worker；</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> def <span class="title">fetchAndRunExecutor</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="comment">// 创建 ProcessBuilder</span></span><br><span class="line">      val builder = CommandUtils.buildProcessBuilder(appDesc.command, <span class="keyword">new</span> SecurityManager(conf),</span><br><span class="line">        memory, sparkHome.getAbsolutePath, substituteVariables)</span><br><span class="line">      <span class="comment">// 封装指令</span></span><br><span class="line">      val command = builder.command()</span><br><span class="line">      val formattedCommand = command.asScala.mkString(<span class="string">"\""</span>, <span class="string">"\" \""</span>, <span class="string">"\""</span>)</span><br><span class="line">      logInfo(s<span class="string">"Launch command: $formattedCommand"</span>)</span><br><span class="line"></span><br><span class="line">      builder.directory(executorDir)</span><br><span class="line">      builder.environment.put(<span class="string">"SPARK_EXECUTOR_DIRS"</span>, appLocalDirs.mkString(File.pathSeparator))</span><br><span class="line">      <span class="comment">// In case we are running this from within the Spark Shell, avoid creating a "scala"</span></span><br><span class="line">      <span class="comment">// parent process for the executor command</span></span><br><span class="line">      builder.environment.put(<span class="string">"SPARK_LAUNCH_WITH_SCALA"</span>, <span class="string">"0"</span>)</span><br><span class="line"></span><br><span class="line">      <span class="comment">// Add webUI log urls</span></span><br><span class="line">      val baseUrl =</span><br><span class="line">        <span class="keyword">if</span> (conf.getBoolean(<span class="string">"spark.ui.reverseProxy"</span>, <span class="keyword">false</span>)) &#123;</span><br><span class="line">          s<span class="string">"/proxy/$workerId/logPage/?appId=$appId&amp;executorId=$execId&amp;logType="</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          s<span class="string">"http://$publicAddress:$webUiPort/logPage/?appId=$appId&amp;executorId=$execId&amp;logType="</span></span><br><span class="line">        &#125;</span><br><span class="line">      builder.environment.put(<span class="string">"SPARK_LOG_URL_STDERR"</span>, s<span class="string">"$&#123;baseUrl&#125;stderr"</span>)</span><br><span class="line">      builder.environment.put(<span class="string">"SPARK_LOG_URL_STDOUT"</span>, s<span class="string">"$&#123;baseUrl&#125;stdout"</span>)</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 启动进程</span></span><br><span class="line">      process = builder.start()</span><br><span class="line">      val header = <span class="string">"Spark Executor Command: %s\n%s\n\n"</span>.format(</span><br><span class="line">        formattedCommand, <span class="string">"="</span> * <span class="number">40</span>)</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 重定向标准输出流</span></span><br><span class="line">      <span class="comment">// Redirect its stdout and stderr to files</span></span><br><span class="line">      val stdout = <span class="keyword">new</span> File(executorDir, <span class="string">"stdout"</span>)</span><br><span class="line">      stdoutAppender = FileAppender(process.getInputStream, stdout, conf)</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 重定向错误输出流</span></span><br><span class="line">      val stderr = <span class="keyword">new</span> File(executorDir, <span class="string">"stderr"</span>)</span><br><span class="line">      Files.write(header, stderr, StandardCharsets.UTF_8)</span><br><span class="line">      stderrAppender = FileAppender(process.getErrorStream, stderr, conf)</span><br><span class="line"></span><br><span class="line">      <span class="comment">// Wait for it to exit; executor may exit with code 0 (when driver instructs it to shutdown)</span></span><br><span class="line">      <span class="comment">// or with nonzero exit code</span></span><br><span class="line">      <span class="comment">// 等待退出码</span></span><br><span class="line">      val exitCode = process.waitFor()</span><br><span class="line">      state = ExecutorState.EXITED</span><br><span class="line">      val message = <span class="string">"Command exited with code "</span> + exitCode</span><br><span class="line">      <span class="comment">// 将退出码发送给 worker</span></span><br><span class="line">      worker.send(ExecutorStateChanged(appId, execId, state, Some(message), Some(exitCode)))</span><br><span class="line">    &#125; <span class="keyword">catch</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> interrupted: InterruptedException =&gt;</span><br><span class="line">        logInfo(<span class="string">"Runner thread for executor "</span> + fullId + <span class="string">" interrupted"</span>)</span><br><span class="line">        state = ExecutorState.KILLED</span><br><span class="line">        killProcess(None)</span><br><span class="line">      <span class="keyword">case</span> e: Exception =&gt;</span><br><span class="line">        logError(<span class="string">"Error running executor"</span>, e)</span><br><span class="line">        state = ExecutorState.FAILED</span><br><span class="line">        killProcess(Some(e.toString))</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>至此，Executor 是启动完成了。</p>
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Spark/" rel="tag"># Spark</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/BigData/2019-07-02-Spark-源码分析（四）-Application-的注册.html" rel="next" title="Spark 源码分析（四）: Application 的注册">
+                <i class="fa fa-chevron-left"></i> Spark 源码分析（四）: Application 的注册
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/BigData/2019-07-02-Spark-源码解析（六）-向-driver-注册-Executor.html" rel="prev" title="Spark 源码分析（六）: 向 driver 注册 Executor">
+                Spark 源码分析（六）: 向 driver 注册 Executor <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="http://stonezhu.top/avatar.jpg" alt="朱磊">
+            
+              <p class="site-author-name" itemprop="name">朱磊</p>
+              <p class="site-description motion-element" itemprop="description">stone</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">86</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">11</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">69</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/Zzz468005600" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://zhulei.blog.csdn.net" target="_blank" title="CSDN"><i class="fa fa-fw fa-globe"></i>CSDN</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://www.jianshu.com/u/9f869537b90e" target="_blank" title="简书"><i class="fa fa-fw fa-heartbeat"></i>简书</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://juejin.im/user/5b246031e51d4558d43fb44d/posts" target="_blank" title="掘金"><i class="fa fa-fw fa-spinner"></i>掘金</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://blog.luliangdev.cn" title="LuLiangDev" target="_blank">LuLiangDev</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">朱磊</span>
+
+  
+
+  
+</div>
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+  
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/reading_progress/reading_progress.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

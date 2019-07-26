@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico?v=6.3.0">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+  <meta name="description" content="爬虫是什么？爬虫是一段自动抓取互联网信息的程序，从而可以更好利用数据进行相关分析，做出相关决策。 简单的爬虫架构">
+<meta name="keywords" content="Python,爬虫">
+<meta property="og:type" content="article">
+<meta property="og:title" content="爬取1000条百度百科词条">
+<meta property="og:url" content="http://zhuleiblog.com/posts/Python/2018-07-15-爬取1000条百度百科词条.html">
+<meta property="og:site_name" content="朱磊">
+<meta property="og:description" content="爬虫是什么？爬虫是一段自动抓取互联网信息的程序，从而可以更好利用数据进行相关分析，做出相关决策。 简单的爬虫架构">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://stonezhu.top/blog/baike_spider.png">
+<meta property="og:image" content="http://stonezhu.top/blog/baike_01.png">
+<meta property="og:image" content="http://stonezhu.top/blog/baike_02.png">
+<meta property="og:updated_time" content="2018-07-15T14:00:55.490Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="爬取1000条百度百科词条">
+<meta name="twitter:description" content="爬虫是什么？爬虫是一段自动抓取互联网信息的程序，从而可以更好利用数据进行相关分析，做出相关决策。 简单的爬虫架构">
+<meta name="twitter:image" content="http://stonezhu.top/blog/baike_spider.png">
+
+
+
+
+
+
+  <link rel="canonical" href="http://zhuleiblog.com/posts/Python/2018-07-15-爬取1000条百度百科词条.html">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>爬取1000条百度百科词条 | 朱磊</title>
+  
+
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?084a44ac8106ee8c8af269853fa68cda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">朱磊</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">select * from life</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签<span class="badge">69</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类<span class="badge">11</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">86</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+    <div class="reading-progress-bar"></div>
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/Python/2018-07-15-爬取1000条百度百科词条.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="朱磊">
+      <meta itemprop="description" content="stone">
+      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="朱磊">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">爬取1000条百度百科词条
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2018-07-15 21:51:55" itemprop="dateCreated datePublished" datetime="2018-07-15T21:51:55+08:00">2018-07-15</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Python/" itemprop="url" rel="index"><span itemprop="name">Python</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="爬虫是什么？"><a href="#爬虫是什么？" class="headerlink" title="爬虫是什么？"></a>爬虫是什么？</h1><p>爬虫是一段自动抓取互联网信息的程序，从而可以更好利用数据进行相关分析，做出相关决策。</p>
+<h1 id="简单的爬虫架构"><a href="#简单的爬虫架构" class="headerlink" title="简单的爬虫架构"></a>简单的爬虫架构</h1><p><img src="http://stonezhu.top/blog/baike_spider.png" alt="结构图"></p>
+<a id="more"></a>
+<p>如上图所示，这个架构主要分成五个部分：</p>
+<ol>
+<li>爬虫总调度器<br>主要用来调度其他各个模块互相协作获取到我们想要的数据</li>
+<li>url管理器<br>这里面主要管理两部分数据：尚未爬取的url和等待爬取的url数据</li>
+<li>下载器<br>从url管理器中获取尚未爬取的ulr，使用urllib中的request模块爬取网络数据。</li>
+<li>解析器<br>从下载器中获取的html数据解析出新的url和我们想提取的数据。</li>
+<li>输出器<br>将我们想要的数据输出到文件中。</li>
+</ol>
+<h1 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h1><ol>
+<li>先看url管理器：</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env python</span></span><br><span class="line"><span class="comment"># -*- coding: utf-8 -*-</span></span><br><span class="line"><span class="comment"># @Date    : 2018-07-15 15:25:55</span></span><br><span class="line"><span class="comment"># @Author  : zhulei (zhuleimailname@gmail.com)</span></span><br><span class="line"><span class="comment"># @Link    : http://zhuleiblog.com</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">UrlManager</span><span class="params">(object)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.new_urls = set()</span><br><span class="line">        self.old_urls = set()</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">add_new_url</span><span class="params">(self, url)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> url <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        <span class="keyword">if</span> url <span class="keyword">not</span> <span class="keyword">in</span> self.new_urls <span class="keyword">and</span> url <span class="keyword">not</span> <span class="keyword">in</span> self.old_urls:</span><br><span class="line">            self.new_urls.add(url)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">add_new_urls</span><span class="params">(self, urls)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> urls <span class="keyword">is</span> <span class="literal">None</span> <span class="keyword">or</span> len(urls) == <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        <span class="keyword">for</span> url <span class="keyword">in</span> urls:</span><br><span class="line">            self.add_new_url(url)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">has_new_url</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> len(self.new_urls) != <span class="number">0</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_new_url</span><span class="params">(self)</span>:</span></span><br><span class="line">        new_url = self.new_urls.pop()</span><br><span class="line">        self.old_urls.add(new_url)</span><br><span class="line">        <span class="keyword">return</span> new_url</span><br></pre></td></tr></table></figure>
+<p>这个模块主要作用是管理带爬取和以爬取的url，其中new_urls是指待爬取的url，old_urls是指已经爬取的url，数据结构都是set，可以直接去重。</p>
+<ol start="2">
+<li>下载器：<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env python</span></span><br><span class="line"><span class="comment"># -*- coding: utf-8 -*-</span></span><br><span class="line"><span class="comment"># @Date    : 2018-07-15 15:25:01</span></span><br><span class="line"><span class="comment"># @Author  : zhulei (zhuleimailname@gmail.com)</span></span><br><span class="line"><span class="comment"># @Link    : http://zhuleiblog.com</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> urllib <span class="keyword">import</span> request</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HtmlDownloader</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="string">"""Html下载器"""</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">download</span><span class="params">(self, url)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> url <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">None</span></span><br><span class="line"></span><br><span class="line">        response = request.urlopen(url)</span><br><span class="line">        <span class="keyword">if</span> response.getcode() != <span class="number">200</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">None</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> response.read()</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>这个就比较简单了，直接使用urllib中的request模块爬取数据</p>
+<ol start="3">
+<li>解析器：<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env python</span></span><br><span class="line"><span class="comment"># -*- coding: utf-8 -*-</span></span><br><span class="line"><span class="comment"># @Date    : 2018-07-15 15:25:31</span></span><br><span class="line"><span class="comment"># @Author  : zhulei (zhuleimailname@gmail.com)</span></span><br><span class="line"><span class="comment"># @Link    : http://zhuleiblog.com</span></span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">from</span> urllib <span class="keyword">import</span> parse</span><br><span class="line"><span class="keyword">from</span> bs4 <span class="keyword">import</span> BeautifulSoup</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HtmlParser</span><span class="params">(object)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">_get_new_urls</span><span class="params">(self, page_url, soup)</span>:</span></span><br><span class="line">        new_urls = set()</span><br><span class="line"></span><br><span class="line">        <span class="comment"># &lt;a target="_blank" href="/item/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E8%AF%AD%E8%A8%80"&gt;计算机程序设计语言&lt;/a&gt;</span></span><br><span class="line">        links = soup.find_all(<span class="string">'a'</span>, href=re.compile(<span class="string">r"/item/"</span>))</span><br><span class="line">        <span class="keyword">for</span> link <span class="keyword">in</span> links:</span><br><span class="line">            new_url = link[<span class="string">'href'</span>]</span><br><span class="line">            new_full_url = parse.urljoin(page_url, new_url)</span><br><span class="line">            new_urls.add(new_full_url)</span><br><span class="line">        <span class="keyword">return</span> new_urls</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">_get_new_data</span><span class="params">(self, page_url, soup)</span>:</span></span><br><span class="line">        res_data = &#123;&#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># url</span></span><br><span class="line">        res_data[<span class="string">'url'</span>] = page_url</span><br><span class="line"></span><br><span class="line">        <span class="comment"># &lt;dd class="lemmaWgt-lemmaTitle-title"&gt;</span></span><br><span class="line">        <span class="comment"># &lt;h1&gt;Python&lt;/h1&gt;</span></span><br><span class="line">        <span class="comment"># &lt;h2&gt;（计算机程序设计语言）&lt;/h2&gt;</span></span><br><span class="line">        <span class="comment"># &lt;a href="javascript:;" class="edit-lemma cmn-btn-hover-blue cmn-btn-28 j-edit-link" style="display: inline-block;"&gt;&lt;em class="cmn-icon wiki-lemma-icons wiki-lemma-icons_edit-lemma"&gt;&lt;/em&gt;编辑&lt;/a&gt;</span></span><br><span class="line">        <span class="comment"># &lt;a class="lock-lemma" target="_blank" href="/view/10812319.htm" title="锁定"&gt;&lt;em class="cmn-icon wiki-lemma-icons wiki-lemma-icons_lock-lemma"&gt;&lt;/em&gt;锁定&lt;/a&gt;</span></span><br><span class="line">        <span class="comment"># &lt;/dd&gt;</span></span><br><span class="line">        title_node = soup.find(<span class="string">'dd'</span>, class_=<span class="string">'lemmaWgt-lemmaTitle-title'</span>).find(<span class="string">'h1'</span>)</span><br><span class="line">        res_data[<span class="string">'title'</span>] = title_node.get_text()</span><br><span class="line"></span><br><span class="line">        <span class="comment"># &lt;div class="lemma-summary" label-module="lemmaSummary"&gt;</span></span><br><span class="line">        <span class="comment"># &lt;div class="para" label-module="para"&gt;Python&lt;sup class="sup--normal" data-sup="1"&gt;</span></span><br><span class="line">        <span class="comment"># [1]&lt;/sup&gt;&lt;a class="sup-anchor" name="ref_[1]_21087"&gt;&amp;nbsp;&lt;/a&gt;</span></span><br><span class="line">        <span class="comment"># （英国发音：/ˈpaɪθən/ 美国发音：/ˈpaɪθɑːn/）, 是一种面向对象的解释型&lt;a target="_blank" href="/item/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E8%AF%AD%E8%A8%80"&gt;计算机程序设计语言&lt;/a&gt;，由荷兰人&lt;a target="_blank" href="/item/Guido%20van%20Rossum"&gt;Guido van Rossum&lt;/a&gt;于1989年发明，第一个公开发行版发行于1991年。&lt;/div&gt;&lt;div class="para" label-module="para"&gt;Python是纯粹的&lt;a target="_blank" href="/item/%E8%87%AA%E7%94%B1%E8%BD%AF%E4%BB%B6/405190" data-lemmaid="405190"&gt;自由软件&lt;/a&gt;， &lt;a target="_blank" href="/item/%E6%BA%90%E4%BB%A3%E7%A0%81/3969" data-lemmaid="3969"&gt;源代码&lt;/a&gt;和&lt;a target="_blank" href="/item/%E8%A7%A3%E9%87%8A%E5%99%A8"&gt;解释器&lt;/a&gt;CPython遵循 &lt;a target="_blank" href="/item/GPL"&gt;GPL&lt;/a&gt;(&lt;a target="_blank" href="/item/GNU"&gt;GNU&lt;/a&gt; General Public License)协议。Python语法简洁清晰，特色之一是强制用空白符(white space)作为语句缩进。&lt;/div&gt;&lt;div class="para" label-module="para"&gt;Python具有丰富和强大的库。它常被昵称为&lt;a target="_blank" href="/item/%E8%83%B6%E6%B0%B4%E8%AF%AD%E8%A8%80/3564482" data-lemmaid="3564482"&gt;胶水语言&lt;/a&gt;，能够把用其他语言制作的各种模块（尤其是&lt;a target="_blank" href="/item/C/7252092" data-lemmaid="7252092"&gt;C&lt;/a&gt;/&lt;a target="_blank" href="/item/C%2B%2B"&gt;C++&lt;/a&gt;）很轻松地联结在一起。常见的一种应用情形是，使用Python快速生成程序的原型（有时甚至是程序的最终界面），然后对其中有特别要求的部分，用更合适的语言改写，比如&lt;a target="_blank" href="/item/3D%E6%B8%B8%E6%88%8F"&gt;3D游戏&lt;/a&gt;中的图形渲染模块，性能要求特别高，就可以用&lt;a target="_blank" href="/item/C%2FC%2B%2B/6824246" data-lemmaid="6824246"&gt;C/C++&lt;/a&gt;重写，而后封装为Python可以调用的扩展类库。需要注意的是在您使用扩展类库时可能需要考虑平台问题，某些可能不提供&lt;a target="_blank" href="/item/%E8%B7%A8%E5%B9%B3%E5%8F%B0/8558902" data-lemmaid="8558902"&gt;跨平台&lt;/a&gt;的实现。&lt;/div&gt;&lt;div class="para" label-module="para"&gt;7月20日，&lt;a target="_blank" href="/item/IEEE/150905" data-lemmaid="150905"&gt;IEEE&lt;/a&gt;发布2017年编程语言排行榜：Python高居首位&lt;sup class="sup--normal" data-sup="2"&gt;</span></span><br><span class="line">        <span class="comment"># [2]&lt;/sup&gt;&lt;a class="sup-anchor" name="ref_[2]_21087"&gt;&amp;nbsp;&lt;/a&gt;</span></span><br><span class="line">        <span class="comment"># 。&lt;/div&gt;&lt;div class="para" label-module="para"&gt;2018年3月，该语言作者在邮件列表上宣布 Python 2.7将于2020年1月1日终止支持。用户如果想要在这个日期之后继续得到与Python 2.7有关的支持，则需要付费给商业供应商。&lt;sup class="sup--normal" data-sup="3"&gt;</span></span><br><span class="line">        <span class="comment"># [3]&lt;/sup&gt;&lt;a class="sup-anchor" name="ref_[3]_21087"&gt;&amp;nbsp;&lt;/a&gt;</span></span><br><span class="line">        <span class="comment"># &lt;/div&gt;</span></span><br><span class="line">        <span class="comment"># &lt;/div&gt;</span></span><br><span class="line">        summary_node = soup.find(<span class="string">'div'</span>, class_=<span class="string">'lemma-summary'</span>).find(<span class="string">'div'</span>, class_=<span class="string">'para'</span>)</span><br><span class="line">        res_data[<span class="string">'summary'</span>] = summary_node.get_text()</span><br><span class="line">        <span class="keyword">return</span> res_data</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">parse</span><span class="params">(self, page_url, html_content)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> page_url <span class="keyword">is</span> <span class="literal">None</span> <span class="keyword">or</span> html_content <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">        soup = BeautifulSoup(html_content, <span class="string">'html.parser'</span>, from_encoding=<span class="string">'utf-8'</span>)</span><br><span class="line">        new_urls = self._get_new_urls(page_url, soup)</span><br><span class="line">        new_data = self._get_new_data(page_url, soup)</span><br><span class="line">        <span class="keyword">return</span> new_urls, new_data</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>这个模块主要是将下载器的数据进行解析，解析使用的是「BeautifulSoup」这个第三方库，如果没有安装的话，请先安装：<br><code>pip install beautifulsoup4</code><br>这里需要分析我们需要爬取的数据内容，我这里想爬取的内容是：百科词条的标题和简介<br><img src="http://stonezhu.top/blog/baike_01.png" alt="标题和简介"></p>
+<p>首先我们要先看下标题的html标签格式是什么样的，右击标题「Python」-&gt; 检查，可以看到它的标签如下：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># <span class="tag">&lt;<span class="name">dd</span> <span class="attr">class</span>=<span class="string">"lemmaWgt-lemmaTitle-title"</span>&gt;</span></span><br><span class="line"># <span class="tag">&lt;<span class="name">h1</span>&gt;</span>Python<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span><br><span class="line"># <span class="tag">&lt;<span class="name">h2</span>&gt;</span>（计算机程序设计语言）<span class="tag">&lt;/<span class="name">h2</span>&gt;</span></span><br><span class="line"># <span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"javascript:;"</span> <span class="attr">class</span>=<span class="string">"edit-lemma cmn-btn-hover-blue cmn-btn-28 j-edit-link"</span> <span class="attr">style</span>=<span class="string">"display: inline-block;"</span>&gt;</span><span class="tag">&lt;<span class="name">em</span> <span class="attr">class</span>=<span class="string">"cmn-icon wiki-lemma-icons wiki-lemma-icons_edit-lemma"</span>&gt;</span><span class="tag">&lt;/<span class="name">em</span>&gt;</span>编辑<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line"># <span class="tag">&lt;<span class="name">a</span> <span class="attr">class</span>=<span class="string">"lock-lemma"</span> <span class="attr">target</span>=<span class="string">"_blank"</span> <span class="attr">href</span>=<span class="string">"/view/10812319.htm"</span> <span class="attr">title</span>=<span class="string">"锁定"</span>&gt;</span><span class="tag">&lt;<span class="name">em</span> <span class="attr">class</span>=<span class="string">"cmn-icon wiki-lemma-icons wiki-lemma-icons_lock-lemma"</span>&gt;</span><span class="tag">&lt;/<span class="name">em</span>&gt;</span>锁定<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line"># <span class="tag">&lt;/<span class="name">dd</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>可以看出是在<code>dd</code>标签中<code>class</code>属性为<code>lemmaWgt-lemmaTitle-title</code>的<code>h1</code>标签中，所以代码很简单：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">title_node = soup.find(<span class="string">'dd'</span>, class_=<span class="string">'lemmaWgt-lemmaTitle-title'</span>).find(<span class="string">'h1'</span>)</span><br><span class="line">res_data[<span class="string">'title'</span>] = title_node.get_text()</span><br></pre></td></tr></table></figure></p>
+<p>同理可以找出简介的标签规律。</p>
+<ol start="4">
+<li>输出器：<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HtmlOutputer</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.datas = []</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">collect_data</span><span class="params">(self, data)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> data <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        self.datas.append(data)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">output_html</span><span class="params">(self)</span>:</span></span><br><span class="line">        f_out = <span class="literal">None</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            f_out = open(<span class="string">'output.html'</span>, <span class="string">'w'</span>, encoding=<span class="string">'utf-8'</span>)</span><br><span class="line"></span><br><span class="line">            f_out.write(<span class="string">"&lt;html&gt;"</span>)</span><br><span class="line">            f_out.write(<span class="string">"&lt;body&gt;"</span>)</span><br><span class="line">            f_out.write(<span class="string">"&lt;table&gt;"</span>)</span><br><span class="line"></span><br><span class="line">            <span class="keyword">for</span> data <span class="keyword">in</span> self.datas:</span><br><span class="line">                f_out.write(<span class="string">"&lt;tr&gt;"</span>)</span><br><span class="line">                f_out.write(<span class="string">"&lt;td style=\"width:500;word-break:break-all\"&gt;%s&lt;/td&gt;"</span> % data[<span class="string">'url'</span>])</span><br><span class="line">                f_out.write(<span class="string">"&lt;td style=\"width:150;word-break:break-all\"&gt;%s&lt;/td&gt;"</span> % data[<span class="string">'title'</span>])</span><br><span class="line">                f_out.write(<span class="string">"&lt;td&gt;%s&lt;/td&gt;"</span> % data[<span class="string">'summary'</span>])</span><br><span class="line"></span><br><span class="line">            f_out.write(<span class="string">"&lt;/table&gt;"</span>)</span><br><span class="line">            f_out.write(<span class="string">"&lt;/body&gt;"</span>)</span><br><span class="line">            f_out.write(<span class="string">"&lt;/html&gt;"</span>)</span><br><span class="line">        <span class="keyword">finally</span>:</span><br><span class="line">            <span class="keyword">if</span> f_out:</span><br><span class="line">                f_out.close()</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>这个模块也很简单，主要是存储我们想要的数据，并将其以html中表格的格式输出到「output.html」这个文件中，不过要注意一点由于爬取的内容有中文，所以一定要指定<code>encoding</code>为<code>utf-8</code>，不然会出现乱码。</p>
+<ol start="5">
+<li>最后我们写好我们的调度器，进行爬取1000条词条数据：<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env python</span></span><br><span class="line"><span class="comment"># -*- coding: utf-8 -*-</span></span><br><span class="line"><span class="comment"># @Date    : 2018-07-15 15:23:26</span></span><br><span class="line"><span class="comment"># @Author  : zhulei (zhuleimailname@gmail.com)</span></span><br><span class="line"><span class="comment"># @Link    : http://zhuleiblog.com</span></span><br><span class="line"><span class="keyword">from</span> baike_spider <span class="keyword">import</span> url_manager, html_downloader, html_parser, html_outputer</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Spider</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.url_manager = url_manager.UrlManager()</span><br><span class="line">        self.downloader = html_downloader.HtmlDownloader()</span><br><span class="line">        self.html_parser = html_parser.HtmlParser()</span><br><span class="line">        self.html_outputer = html_outputer.HtmlOutputer()</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">craw</span><span class="params">(self, rootUrl)</span>:</span></span><br><span class="line"></span><br><span class="line">        count = <span class="number">1</span></span><br><span class="line">        self.url_manager.add_new_url(rootUrl)</span><br><span class="line">        <span class="keyword">while</span> self.url_manager.has_new_url():</span><br><span class="line">            <span class="keyword">try</span>:</span><br><span class="line"></span><br><span class="line">                new_url = self.url_manager.get_new_url()</span><br><span class="line">                print(<span class="string">"craw%d -&gt; %s"</span> % (count, new_url))</span><br><span class="line">                content = self.downloader.download(new_url)</span><br><span class="line">                new_urls, data = self.html_parser.parse(new_url, content)</span><br><span class="line">                self.url_manager.add_new_urls(new_urls)</span><br><span class="line">                self.html_outputer.collect_data(data)</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> count == <span class="number">1000</span>:</span><br><span class="line">                    <span class="keyword">break</span></span><br><span class="line">                count = count + <span class="number">1</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">except</span>:</span><br><span class="line">                print(<span class="string">'craw failed'</span>)</span><br><span class="line"></span><br><span class="line">        self.html_outputer.output_html()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">root_url = <span class="string">"https://baike.baidu.com/item/Python/407313"</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    spider = Spider()</span><br><span class="line">    spider.craw(root_url)</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>起始url为Python词条的url：<code>root_url = &quot;https://baike.baidu.com/item/Python/407313&quot;</code><br>好了，运行调度器，开始爬取数据吧。</p>
+<h1 id="看下最后运行的结果："><a href="#看下最后运行的结果：" class="headerlink" title="看下最后运行的结果："></a>看下最后运行的结果：</h1><p>存储的文件是html文件，找到文件路径使用浏览器打开可以看到如下图:</p>
+<p><img src="http://stonezhu.top/blog/baike_02.png" alt="百科爬取词条"></p>
+<p><strong><a href="https://github.com/Zzz468005600/python-study/tree/master/baike_spider" target="_blank" rel="noopener">源码链接</a></strong></p>
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Python/" rel="tag"># Python</a>
+          
+            <a href="/tags/爬虫/" rel="tag"># 爬虫</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/DesignPattern/2018-07-14-设计模式之观察者模式.html" rel="next" title="设计模式之观察者模式">
+                <i class="fa fa-chevron-left"></i> 设计模式之观察者模式
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/Linux/2018-07-19-Linux学习之初识.html" rel="prev" title="Linux学习之初识">
+                Linux学习之初识 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="http://stonezhu.top/avatar.jpg" alt="朱磊">
+            
+              <p class="site-author-name" itemprop="name">朱磊</p>
+              <p class="site-description motion-element" itemprop="description">stone</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">86</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">11</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">69</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/Zzz468005600" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://zhulei.blog.csdn.net" target="_blank" title="CSDN"><i class="fa fa-fw fa-globe"></i>CSDN</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://www.jianshu.com/u/9f869537b90e" target="_blank" title="简书"><i class="fa fa-fw fa-heartbeat"></i>简书</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://juejin.im/user/5b246031e51d4558d43fb44d/posts" target="_blank" title="掘金"><i class="fa fa-fw fa-spinner"></i>掘金</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://blog.luliangdev.cn" title="LuLiangDev" target="_blank">LuLiangDev</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#爬虫是什么？"><span class="nav-text">爬虫是什么？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#简单的爬虫架构"><span class="nav-text">简单的爬虫架构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用"><span class="nav-text">使用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#看下最后运行的结果："><span class="nav-text">看下最后运行的结果：</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">朱磊</span>
+
+  
+
+  
+</div>
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+  
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/reading_progress/reading_progress.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico?v=6.3.0">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+  <meta name="description" content="概述 Retrofit开源项目地址  Retrofit项目官网 官网上有它的一系列基本用法，以及他的介绍：A type-safe HTTP client for Android and Java，它和Okhttp一样都是square公司的开源项目。">
+<meta name="keywords" content="Android,Retrofit">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Retrofit项目封装使用">
+<meta property="og:url" content="http://zhuleiblog.com/posts/Android/2018-06-11-Retrofit项目封装使用.html">
+<meta property="og:site_name" content="朱磊">
+<meta property="og:description" content="概述 Retrofit开源项目地址  Retrofit项目官网 官网上有它的一系列基本用法，以及他的介绍：A type-safe HTTP client for Android and Java，它和Okhttp一样都是square公司的开源项目。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-07-11T09:13:38.420Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Retrofit项目封装使用">
+<meta name="twitter:description" content="概述 Retrofit开源项目地址  Retrofit项目官网 官网上有它的一系列基本用法，以及他的介绍：A type-safe HTTP client for Android and Java，它和Okhttp一样都是square公司的开源项目。">
+
+
+
+
+
+
+  <link rel="canonical" href="http://zhuleiblog.com/posts/Android/2018-06-11-Retrofit项目封装使用.html">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Retrofit项目封装使用 | 朱磊</title>
+  
+
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?084a44ac8106ee8c8af269853fa68cda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">朱磊</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">select * from life</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签<span class="badge">69</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类<span class="badge">11</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">86</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+    <div class="reading-progress-bar"></div>
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/Android/2018-06-11-Retrofit项目封装使用.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="朱磊">
+      <meta itemprop="description" content="stone">
+      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="朱磊">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Retrofit项目封装使用
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2018-06-11 11:21:38" itemprop="dateCreated datePublished" datetime="2018-06-11T11:21:38+08:00">2018-06-11</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><ol>
+<li><p><a href="https://github.com/square/retrofit.git" target="_blank" rel="noopener">Retrofit开源项目地址</a></p>
+</li>
+<li><p><a href="http://square.github.io/retrofit/" target="_blank" rel="noopener">Retrofit项目官网</a></p>
+<p>官网上有它的一系列基本用法，以及他的介绍：A type-safe HTTP client for Android and Java，它和Okhttp一样都是square公司的开源项目。</p>
+</li>
+</ol>
+<a id="more"></a>
+<h2 id="RESTful-Api"><a href="#RESTful-Api" class="headerlink" title="RESTful Api"></a>RESTful Api</h2><p><strong>看下面设计的三个删除评论的 api</strong></p>
+<p><a href="http://test.net/?method=comment.del&amp;id=x" target="_blank" rel="noopener">http://test.net/?method=comment.del&amp;id=x</a> ①</p>
+<p><a href="http://test.net/comment/del/id/x" target="_blank" rel="noopener">http://test.net/comment/del/id/x</a> ②</p>
+<p><strong>而 RESTful Api 则是：</strong></p>
+<p>[DELETE] <a href="http://test.net/comments/1" target="_blank" rel="noopener">http://test.net/comments/1</a> ③</p>
+<p>我们对比可以发现①和② URL 中，都有del的动作指示。</p>
+<blockquote>
+<p>SOAP Web API采用RPC风格，它采用面向功能的架构，所以我们在设计SOAP Web API的时候首相考虑的是应高提供怎样的功能（或者操作）。而 RESTful Api 是面向资源的架构。是查询、新增、修改、删除，都与该资源无关。</p>
+</blockquote>
+<blockquote>
+<p>RESTful Api 是以 HTTP 协议为强烈依托的，将类似于①和②这种以功能为主导的URL风格舍弃，还原 URL 的本质，它的宗旨就是一个 URL 就应该是一个资源，不能包含任何动作，如下所示：</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">- [POST]     http:<span class="comment">//test.net/users   // 新增</span></span><br><span class="line">- [GET]      http:<span class="comment">//test.net/users/1 // 查询</span></span><br><span class="line">- [PATCH]    http:<span class="comment">//test.net/users/1 // 更新</span></span><br><span class="line">- [PUT]      http:<span class="comment">//test.net/users/1 // 覆盖，全部更新</span></span><br><span class="line">- [DELETE]   http:<span class="comment">//test.net/users/1 // 删除</span></span><br></pre></td></tr></table></figure>
+<h2 id="url的简单构成"><a href="#url的简单构成" class="headerlink" title="url的简单构成"></a>url的简单构成</h2><p>构成一般是这样的：<code>[scheme:][//authority][path][?query]</code></p>
+<p>看下面一个url：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http:<span class="comment">//www.java2s.com:8080/yourpath/fileName.htm?stove=10&amp;path=32&amp;id=4</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>scheme: http</p>
+</li>
+<li><p>authority: <a href="http://www.java2s.com:8080" target="_blank" rel="noopener">www.java2s.com:8080</a></p>
+</li>
+<li><p>path: /yourpath/fileName.htm</p>
+</li>
+<li><p>query:在？后的部分为：stove=10&amp;path=32&amp;id=4</p>
+</li>
+<li><p>又由于authority又一步可以划分为host:port形式，其中host:port用冒号分隔，冒号前的是host，冒号后的是port，所以：</p>
+<p>host:<a href="http://www.java2s.com" target="_blank" rel="noopener">www.java2s.com</a></p>
+<p>port:8080</p>
+</li>
+</ul>
+<p>这里是url中的参数，除了url中的参数还有两个http协议中常用参数是：header（请求头）和body（常用于post请求中的请求体，有多种封装方法，不暴露在url中）这两个参数。</p>
+<blockquote>
+<p><strong>可以看出整个网络请求中参数主要可以分成：scheme、authority、path、query、header、body这六块，下面主要看下Retrofit怎么配置这六块参数的。</strong></p>
+</blockquote>
+<h2 id="Retrofit参数配置"><a href="#Retrofit参数配置" class="headerlink" title="Retrofit参数配置"></a>Retrofit参数配置</h2><h3 id="scheme和authority"><a href="#scheme和authority" class="headerlink" title="scheme和authority"></a>scheme和authority</h3><p>在retrofit中将这两者合体称为baseurl，接口用法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Retrofit retrofit = <span class="keyword">new</span> Retrofit.Builder()</span><br><span class="line">    .baseUrl(<span class="string">"https://api.github.com/"</span>)</span><br><span class="line">    .build();</span><br></pre></td></tr></table></figure>
+<h3 id="header"><a href="#header" class="headerlink" title="header"></a>header</h3><ul>
+<li>静态header（分为单个键值对和多个键值对两种注解方式）：</li>
+</ul>
+<p><strong>单个键值对注解：</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Headers</span>(<span class="string">"Cache-Control: max-age=640000"</span>)</span><br><span class="line"><span class="meta">@GET</span>(<span class="string">"widget/list"</span>)</span><br><span class="line">Call&lt;List&lt;Widget&gt;&gt; widgetList();</span><br></pre></td></tr></table></figure>
+<p><strong>多个键值对注解：</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Headers</span>(&#123;</span><br><span class="line">    <span class="string">"Accept: application/vnd.github.v3.full+json"</span>,</span><br><span class="line">    <span class="string">"User-Agent: Retrofit-Sample-App"</span></span><br><span class="line">&#125;)</span><br><span class="line"><span class="meta">@GET</span>(<span class="string">"users/&#123;username&#125;"</span>)</span><br><span class="line"><span class="function">Call&lt;User&gt; <span class="title">getUser</span><span class="params">(@Path(<span class="string">"username"</span>)</span> String username)</span>;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>动态header（分为局部动态header和全局动态header）</li>
+</ul>
+<p><strong>局部动态header（分为单个键值对header和多个键值对header）：</strong></p>
+<p>单个键值对局部动态header：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@GET</span>(<span class="string">"user"</span>)</span><br><span class="line"><span class="function">Call&lt;User&gt; <span class="title">getUser</span><span class="params">(@Header(<span class="string">"Authorization"</span>)</span> String authorization)</span></span><br></pre></td></tr></table></figure>
+<p>多个键值对局部动态header（retrofit:2.1.0新加的）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@GET</span>(<span class="string">"user"</span>)</span><br><span class="line"><span class="function">Call&lt;User&gt; <span class="title">getUser</span><span class="params">(@HeaderMap Map&lt;String, String&gt; headerMap)</span></span></span><br></pre></td></tr></table></figure>
+<p><strong>全局动态header（适用于项目中的header规则一致的情况）</strong></p>
+<p>这里是用了 OkHttp的interceptor：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">initHttpClient</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        OkHttpClient.Builder httpClientBuilder = <span class="keyword">new</span> OkHttpClient.Builder();</span><br><span class="line">        <span class="keyword">if</span> (httpClientBuilder.interceptors() != <span class="keyword">null</span>) &#123;</span><br><span class="line">            httpClientBuilder.interceptors().clear();</span><br><span class="line">        &#125;</span><br><span class="line">        httpClientBuilder.addInterceptor(<span class="keyword">new</span> Interceptor() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> Response <span class="title">intercept</span><span class="params">(Chain chain)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">            </span><br><span class="line">	            <span class="comment">//这里可以获取到请求的request所有数据</span></span><br><span class="line">                Request request = chain.request();</span><br><span class="line">                String path = request.url().encodedPath();</span><br><span class="line">                Log.d(<span class="string">"AppClient"</span>, path + <span class="string">"&gt;&gt;&gt;path"</span>);</span><br><span class="line">                String query = request.url().query();</span><br><span class="line">                <span class="keyword">if</span> (BuildConfig.DEBUG)&#123;</span><br><span class="line">                    Log.d(<span class="string">"AppClient"</span>, query + <span class="string">"&gt;&gt;&gt;query"</span>);</span><br><span class="line">                &#125;</span><br><span class="line">				<span class="comment">//这里设置成你的全局header</span></span><br><span class="line">                Request interRequest = chain.request().newBuilder()</span><br><span class="line">                        .headers(Headers.of(Map yourHeader))</span><br><span class="line">                        .build();</span><br><span class="line">                <span class="keyword">return</span> chain.proceed(interRequest);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;)</span><br><span class="line">                .connectTimeout(<span class="number">10</span>, TimeUnit.SECONDS)</span><br><span class="line">                .readTimeout(<span class="number">10</span>, TimeUnit.SECONDS);</span><br><span class="line">        </span><br><span class="line">        mOkHttpClient = httpClientBuilder.build();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="path"><a href="#path" class="headerlink" title="path"></a>path</h3><blockquote>
+<p>这里只看下GET请求，POST, PUT, DELETE请求一样处理</p>
+</blockquote>
+<p><strong>这里分为带参数和不带参数两种：</strong></p>
+<ol>
+<li>不带参数的：</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@GET</span>(<span class="string">"widget/list"</span>)</span><br><span class="line">Call&lt;List&lt;Widget&gt;&gt; widgetList();</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>带参数的：</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@GET</span>(<span class="string">"users/&#123;user&#125;/repos"</span>)</span><br><span class="line">Call&lt;List&lt;Repo&gt;&gt; listRepos(<span class="meta">@Path</span>(<span class="string">"user"</span>) String user);</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>这里是通过@Path(“user”)注解实现参数传递。</p>
+</blockquote>
+<h3 id="query"><a href="#query" class="headerlink" title="query"></a>query</h3><p>以GET请求为例提供了两种注解方式（单个键值对和多个键值对），如下：</p>
+<p><strong>单个键值对：</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@GET</span>(<span class="string">"group/&#123;id&#125;/users"</span>)</span><br><span class="line">Call&lt;List&lt;User&gt;&gt; groupList(<span class="meta">@Path</span>(<span class="string">"id"</span>) <span class="keyword">int</span> groupId, <span class="meta">@Query</span>(<span class="string">"sort"</span>) String sort);</span><br></pre></td></tr></table></figure>
+<p><strong>多个键值对：</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@GET</span>(<span class="string">"group/&#123;id&#125;/users"</span>)</span><br><span class="line">Call&lt;List&lt;User&gt;&gt; groupList(<span class="meta">@Path</span>(<span class="string">"id"</span>) <span class="keyword">int</span> groupId, <span class="meta">@QueryMap</span> Map&lt;String, String&gt; options);</span><br></pre></td></tr></table></figure>
+<h3 id="body"><a href="#body" class="headerlink" title="body"></a>body</h3><p>用于POST请求中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@POST</span>(<span class="string">"users/new"</span>)</span><br><span class="line"><span class="function">Call&lt;User&gt; <span class="title">createUser</span><span class="params">(@Body User user)</span></span>;</span><br></pre></td></tr></table></figure>
+<h2 id="Retrofit请求简单封装"><a href="#Retrofit请求简单封装" class="headerlink" title="Retrofit请求简单封装"></a>Retrofit请求简单封装</h2><p>写在前面：Retrofit中网络请求实际上用的还是他自家的OkHttp，所以如果要配置请求的一些全局参数还是得先创建一个OkHttp的实例对象，然后一一配置，上面讲了配置全局header也是这样处理的，所以这里我将其使用分成了三步：</p>
+<p>这里首先要配三个库（retrofit库，json转化库，log的截断器库）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">compile <span class="string">'com.squareup.retrofit2:retrofit:2.1.0'</span></span><br><span class="line">compile <span class="string">'com.squareup.retrofit2:converter-gson:2.1.0'</span></span><br><span class="line">compile <span class="string">'com.squareup.okhttp3:logging-interceptor:3.4.0-RC1'</span></span><br></pre></td></tr></table></figure>
+<ol>
+<li>构建OkHttpClient实例（配置一些请求的全局参数）：</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">initHttpClient</span><span class="params">()</span> </span>&#123;</span><br><span class="line">       OkHttpClient.Builder httpClientBuilder = <span class="keyword">new</span> OkHttpClient.Builder();</span><br><span class="line">       httpClientBuilder.hostnameVerifier(<span class="keyword">new</span> HostnameVerifier() &#123;</span><br><span class="line">           <span class="meta">@Override</span></span><br><span class="line">           <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">verify</span><span class="params">(String hostname, SSLSession session)</span> </span>&#123;</span><br><span class="line">               <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;);</span><br><span class="line">       <span class="comment">//处理拦截器，主要是做了个header和连接超时、读取超时设置，我项目里header放了些签名信息，主要是这里能拿到整个请求的所有参数，做任何想做的事，而且是全局动态处理</span></span><br><span class="line">       <span class="keyword">if</span> (httpClientBuilder.interceptors() != <span class="keyword">null</span>) &#123;</span><br><span class="line">           httpClientBuilder.interceptors().clear();</span><br><span class="line">       &#125;</span><br><span class="line">       httpClientBuilder.addInterceptor(<span class="keyword">new</span> Interceptor() &#123;</span><br><span class="line">           <span class="meta">@Override</span></span><br><span class="line">           <span class="function"><span class="keyword">public</span> Response <span class="title">intercept</span><span class="params">(Chain chain)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">               Request request = chain.request();</span><br><span class="line">               String path = request.url().encodedPath();</span><br><span class="line">               Log.d(<span class="string">"AppClient"</span>, path + <span class="string">"&gt;&gt;&gt;path"</span>);</span><br><span class="line">               String query = request.url().query();</span><br><span class="line">               <span class="keyword">if</span> (BuildConfig.DEBUG)&#123;</span><br><span class="line">                   Log.d(<span class="string">"AppClient"</span>, query + <span class="string">"&gt;&gt;&gt;query"</span>);</span><br><span class="line">               &#125;</span><br><span class="line">               Map&lt;String, Object&gt; queryParam = <span class="keyword">null</span>;</span><br><span class="line">               <span class="keyword">if</span> (query != <span class="keyword">null</span>)&#123;</span><br><span class="line">                   queryParam = <span class="keyword">new</span> HashMap();</span><br><span class="line">                   String queryEntries[] = query.split(<span class="string">"&amp;"</span>);</span><br><span class="line">                   <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; queryEntries.length; i ++)&#123;</span><br><span class="line">                       queryParam.put(queryEntries[i].split(<span class="string">"="</span>)[<span class="number">0</span>], queryEntries[i].split(<span class="string">"="</span>)[<span class="number">1</span>]);</span><br><span class="line">                   &#125;</span><br><span class="line">               &#125;</span><br><span class="line">               <span class="keyword">if</span> (BuildConfig.DEBUG)&#123;</span><br><span class="line">                   Log.d(<span class="string">"AppClient"</span>, <span class="string">"queryParam:"</span> + queryParam + <span class="string">"&gt;&gt;&gt;queryParam"</span>);</span><br><span class="line">               &#125;</span><br><span class="line">               String signature = makeSignature_v3(path, queryParam);</span><br><span class="line"></span><br><span class="line">               Request interRequest = chain.request().newBuilder()</span><br><span class="line">                       .headers(Headers.of(getHeaders(signature)))</span><br><span class="line">                       .build();</span><br><span class="line">               <span class="keyword">return</span> chain.proceed(interRequest);</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;)</span><br><span class="line">               .connectTimeout(<span class="number">10</span>, TimeUnit.SECONDS)</span><br><span class="line">               .readTimeout(<span class="number">10</span>, TimeUnit.SECONDS);</span><br><span class="line">        <span class="comment">//在debug模式下我使用了一个他家公司的一个log拦截器</span></span><br><span class="line">       <span class="keyword">if</span> (BuildConfig.DEBUG) &#123;</span><br><span class="line">           HttpLoggingInterceptor loggingInterceptor = <span class="keyword">new</span> HttpLoggingInterceptor();</span><br><span class="line">           loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);</span><br><span class="line">           httpClientBuilder.addInterceptor(loggingInterceptor);</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="comment">//通过build模式构建实例</span></span><br><span class="line">       mOkHttpClient = httpClientBuilder.build();</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>这里做了四件事：</p>
+<ul>
+<li><p><code>httpClientBuilder.hostnameVerifier</code>这里是针对我公司的Https证书问题，详情看这里：<a href="http://blog.csdn.net/zzz_zzz_z/article/details/51824765" target="_blank" rel="noopener">https证书问题</a></p>
+</li>
+<li><p>通过拦截器设置header，可以看上面参数设置那里的讲解</p>
+</li>
+<li>设置请求超时时间和读取数据时间</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">.connectTimeout(<span class="number">10</span>, TimeUnit.SECONDS)</span><br><span class="line">.readTimeout(<span class="number">10</span>, TimeUnit.SECONDS);</span><br></pre></td></tr></table></figure>
+<ul>
+<li>设置log拦截器，这里设置之后可以在logcat中看到每个网络请求的请求参数和返回结果以及请求时长，非常好用，当然先要配置下上面我配置的第三个库；</li>
+</ul>
+<ol start="2">
+<li>构建retrofit实例：</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Retrofit <span class="title">retrofit</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (mRetrofit == <span class="keyword">null</span>) &#123;</span><br><span class="line">            initHttpClient();</span><br><span class="line">            mRetrofit = <span class="keyword">new</span> Retrofit.Builder()</span><br><span class="line">                    .baseUrl(BASE_URL)</span><br><span class="line">                    .client(mOkHttpClient)</span><br><span class="line">                    .addConverterFactory(GsonConverterFactory.create())                 .addCallAdapterFactory(RxJavaCallAdapterFactory.create())</span><br><span class="line">                    .build();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> mRetrofit;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>这里配置可以看出，Retrofit内部也是封了一个Okhttp的实例，这里做了四件事：</p>
+<ul>
+<li><p>设置了baseurl参数，可以看我上面参数配置的讲解；</p>
+</li>
+<li><p>设置了OkHttpClient实例；</p>
+</li>
+<li>gson转化工厂：addConverterFactory(GsonConverterFactory.create())，这里Retrofit内部会根据这个转换工厂及返回数据所指定的泛型实现直接转换；</li>
+<li>网络请求的适配器工厂：addCallAdapterFactory(RxJavaCallAdapterFactory.create())，这个可以忽略暂时，因为我项目里使用了RXjava和Retrofit，后续我会写一篇MVP+RXjava+Retrofit的封装使用</li>
+</ul>
+<ol start="3">
+<li>构建call，开始网络请求并实现回调：</li>
+</ol>
+<p>这里先要配置请求参数，我封了个类专门用来设置请求接口：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ApiStores</span> </span>&#123;</span><br><span class="line">    <span class="comment">//POST登录</span></span><br><span class="line">    String RES_USERS_LOGIN = <span class="string">"users/login"</span>;</span><br><span class="line">    <span class="comment">//POST注册</span></span><br><span class="line">    String RES_USERS_REGISTER = <span class="string">"users"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@POST</span>(RES_USERS_LOGIN)</span><br><span class="line">    <span class="function">Observable&lt;Map&gt; <span class="title">login</span><span class="params">(@Body Map&lt;String, String&gt; body)</span></span>;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@POST</span>(RES_USERS_REGISTER)</span><br><span class="line">    <span class="function">Observable&lt;Map&gt; <span class="title">register</span><span class="params">(@Body Map&lt;String, String&gt; body)</span></span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>构建call实例对象，开始网络请求并实现回调：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">login</span><span class="params">(String cityId, <span class="keyword">final</span> String cityName, <span class="keyword">final</span> String mobile, String password, <span class="keyword">final</span> OnLoginListener listener)</span> </span>&#123;</span><br><span class="line">        Map&lt;String, String&gt; body = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">        body.put(<span class="string">"mobile"</span>, mobile);</span><br><span class="line">        body.put(<span class="string">"password"</span>, password);</span><br><span class="line">        body.put(<span class="string">"city"</span>, cityId);</span><br><span class="line">        body.put(<span class="string">"embed"</span>, <span class="string">"home"</span>);       </span><br><span class="line">        ApiStores apiStores = AppClient.retrofit().create(ApiStores.class);</span><br><span class="line">        <span class="comment">//这里通过指定Map泛型集合上面的Gson转换工厂实现返回数据json转换成Map</span></span><br><span class="line">        Call&lt;Map&gt; call = apiStores.login(body);</span><br><span class="line">        call.enqueue(<span class="keyword">new</span> Callback&lt;Map&gt;() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onResponse</span><span class="params">(Call&lt;Map&gt; call, Response&lt;Map&gt; response)</span> </span>&#123;</span><br><span class="line">                <span class="comment">//请求成功做的事情，这里两个参数：call是请求时候的call实例，可以拿到请求的request实例，response是服务端返回的参数，里面包含了code和body(这里的body类型是通过call指定的泛型和Gson转换工厂实现的)，message一系列数据。</span></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onFailure</span><span class="params">(Call&lt;Map&gt; call, Throwable t)</span> </span>&#123;</span><br><span class="line">                <span class="comment">//请求失败做的事情，call和上面一样，外加一个Throwable</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br></pre></td></tr></table></figure>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>Retrofit这个库将ResfulApi的几种请求都通过注解进行了一系列封装，整个请求流程比OkHttp简洁了很多，同时它可以通过设置GSON转换工厂内部实现返回数据的转化，使用过程非常简洁清晰，同时可以配合现在流行的RXjava一起使用，下面我准备搞一篇MVP+RX+Retrofit的封装使用，Okhttp可以换啦！</p>
+<p><strong>具体代码请看我的github:<a href="https://github.com/Zzz468005600/Stone" target="_blank" rel="noopener">Android练习小项目</a></strong></p>
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/Retrofit/" rel="tag"># Retrofit</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/Android/2018-06-11-浅谈Activity-Fragment模块化封装.html" rel="next" title="浅谈Activity,Fragment模块化封装">
+                <i class="fa fa-chevron-left"></i> 浅谈Activity,Fragment模块化封装
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/Android/2018-06-11-ToolBar项目封装使用.html" rel="prev" title="ToolBar项目封装使用">
+                ToolBar项目封装使用 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="http://stonezhu.top/avatar.jpg" alt="朱磊">
+            
+              <p class="site-author-name" itemprop="name">朱磊</p>
+              <p class="site-description motion-element" itemprop="description">stone</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">86</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">11</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">69</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/Zzz468005600" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://zhulei.blog.csdn.net" target="_blank" title="CSDN"><i class="fa fa-fw fa-globe"></i>CSDN</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://www.jianshu.com/u/9f869537b90e" target="_blank" title="简书"><i class="fa fa-fw fa-heartbeat"></i>简书</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://juejin.im/user/5b246031e51d4558d43fb44d/posts" target="_blank" title="掘金"><i class="fa fa-fw fa-spinner"></i>掘金</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://blog.luliangdev.cn" title="LuLiangDev" target="_blank">LuLiangDev</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RESTful-Api"><span class="nav-text">RESTful Api</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#url的简单构成"><span class="nav-text">url的简单构成</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Retrofit参数配置"><span class="nav-text">Retrofit参数配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#scheme和authority"><span class="nav-text">scheme和authority</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#header"><span class="nav-text">header</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#path"><span class="nav-text">path</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#query"><span class="nav-text">query</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#body"><span class="nav-text">body</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Retrofit请求简单封装"><span class="nav-text">Retrofit请求简单封装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-text">小结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">朱磊</span>
+
+  
+
+  
+</div>
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+  
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/reading_progress/reading_progress.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

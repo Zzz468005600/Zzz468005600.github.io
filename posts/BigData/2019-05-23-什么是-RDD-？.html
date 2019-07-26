@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico?v=6.3.0">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+  <meta name="description" content="Spark 中最基本的数据抽象是 RDD。 RDD：弹性分布式数据集 (Resilient Distributed DataSet)。 1，RDD 有三个基本特性这三个特性分别为：分区，不可变，并行操作。 a， 分区每一个 RDD 包含的数据被存储在系统的不同节点上。逻辑上我们可以将 RDD 理解成一个大的数组，数组中的每个元素就代表一个分区 (Partition) 。 在物理存储中，每个分区指向">
+<meta name="keywords" content="Spark,RDD">
+<meta property="og:type" content="article">
+<meta property="og:title" content="什么是 RDD ？">
+<meta property="og:url" content="http://zhuleiblog.com/posts/BigData/2019-05-23-什么是-RDD-？.html">
+<meta property="og:site_name" content="朱磊">
+<meta property="og:description" content="Spark 中最基本的数据抽象是 RDD。 RDD：弹性分布式数据集 (Resilient Distributed DataSet)。 1，RDD 有三个基本特性这三个特性分别为：分区，不可变，并行操作。 a， 分区每一个 RDD 包含的数据被存储在系统的不同节点上。逻辑上我们可以将 RDD 理解成一个大的数组，数组中的每个元素就代表一个分区 (Partition) 。 在物理存储中，每个分区指向">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://stonezhu.top//blog/52301.png">
+<meta property="og:image" content="http://stonezhu.top//blog/52302.jpg">
+<meta property="og:image" content="http://stonezhu.top/blog/52303.jpg">
+<meta property="og:updated_time" content="2019-06-06T06:49:42.150Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="什么是 RDD ？">
+<meta name="twitter:description" content="Spark 中最基本的数据抽象是 RDD。 RDD：弹性分布式数据集 (Resilient Distributed DataSet)。 1，RDD 有三个基本特性这三个特性分别为：分区，不可变，并行操作。 a， 分区每一个 RDD 包含的数据被存储在系统的不同节点上。逻辑上我们可以将 RDD 理解成一个大的数组，数组中的每个元素就代表一个分区 (Partition) 。 在物理存储中，每个分区指向">
+<meta name="twitter:image" content="http://stonezhu.top//blog/52301.png">
+
+
+
+
+
+
+  <link rel="canonical" href="http://zhuleiblog.com/posts/BigData/2019-05-23-什么是-RDD-？.html">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>什么是 RDD ？ | 朱磊</title>
+  
+
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?084a44ac8106ee8c8af269853fa68cda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">朱磊</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">select * from life</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签<span class="badge">69</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类<span class="badge">11</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">86</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+    <div class="reading-progress-bar"></div>
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/BigData/2019-05-23-什么是-RDD-？.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="朱磊">
+      <meta itemprop="description" content="stone">
+      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="朱磊">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">什么是 RDD ？
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-05-23 11:18:36" itemprop="dateCreated datePublished" datetime="2019-05-23T11:18:36+08:00">2019-05-23</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/BigData/" itemprop="url" rel="index"><span itemprop="name">BigData</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Spark 中最基本的数据抽象是 RDD。</p>
+<p>RDD：弹性分布式数据集 (Resilient Distributed DataSet)。</p>
+<h3 id="1，RDD-有三个基本特性"><a href="#1，RDD-有三个基本特性" class="headerlink" title="1，RDD 有三个基本特性"></a>1，RDD 有三个基本特性</h3><p>这三个特性分别为：分区，不可变，并行操作。</p>
+<h4 id="a，-分区"><a href="#a，-分区" class="headerlink" title="a， 分区"></a>a， 分区</h4><p>每一个 RDD 包含的数据被存储在系统的不同节点上。逻辑上我们可以将 RDD 理解成一个大的数组，数组中的每个元素就代表一个分区 (Partition) 。</p>
+<p>在物理存储中，每个分区指向一个存储在内存或者硬盘中的数据块 (Block) ，其实这个数据块就是每个 task 计算出的数据块，它们可以分布在不同的节点上。</p>
+<p>所以，RDD 只是抽象意义的数据集合，分区内部并不会存储具体的数据，只会存储它在该 RDD 中的 index，通过该 RDD 的 ID 和分区的 index 可以唯一确定对应数据块的编号，然后通过底层存储层的接口提取到数据进行处理。</p>
+<p>在集群中，各个节点上的数据块会尽可能的存储在内存中，只有当内存没有空间时才会放入硬盘存储，这样可以最大化的减少硬盘 IO 的开销。</p>
+<a id="more"></a>
+<h4 id="b，不可变"><a href="#b，不可变" class="headerlink" title="b，不可变"></a>b，不可变</h4><p>不可变性是指每个 RDD 都是只读的，它所包含的分区信息是不可变的。由于已有的 RDD 是不可变的，所以我们只有对现有的 RDD 进行转化 (Transformation) 操作，才能得到新的 RDD ，一步一步的计算出我们想要的结果。</p>
+<p>这样会带来这样的好处：我们在 RDD 的计算过程中，不需要立刻去存储计算出的数据本身，我们只要记录每个 RDD 是经过哪些转化操作得来的，即：<strong>依赖关系</strong>，这样一方面可以提高计算效率，一方面是错误恢复会更加容易。如果在计算过程中，第 N 步输出的 RDD 的节点发生故障，数据丢失，那么可以根据依赖关系从第 N-1 步去重新计算出该 RDD，这也是 RDD 叫做<strong>“弹性”</strong>分布式数据集的一个原因。</p>
+<h4 id="c，并行操作"><a href="#c，并行操作" class="headerlink" title="c，并行操作"></a>c，并行操作</h4><p>因为 RDD 的分区特性，所以其天然支持并行处理的特性。即不同节点上的数据可以分别被处理，然后生成一个新的 RDD。</p>
+<h3 id="2，RDD-的结构"><a href="#2，RDD-的结构" class="headerlink" title="2，RDD 的结构"></a>2，RDD 的结构</h3><p>每个 RDD 里都会包括分区信息、依赖关系等等的信息，如下图所示：</p>
+<p><img src="http://stonezhu.top//blog/52301.png" alt="RDD图解"></p>
+<h4 id="a，Partitions"><a href="#a，Partitions" class="headerlink" title="a，Partitions"></a>a，Partitions</h4><p>Partitions 就是上面所说的，代表着 RDD 中数据的逻辑结构，每个 Partion 会映射到某个节点内存或者硬盘的一个数据块。</p>
+<h4 id="b，SparkContext"><a href="#b，SparkContext" class="headerlink" title="b，SparkContext"></a>b，SparkContext</h4><p>SparkContext 是所有 Spark 功能的入口，代表了与 Spark 节点的连接，可以用来创建 RDD 对象以及在节点中的广播变量等等。一个线程只有一个 SparkContext。</p>
+<h4 id="c，SparkConf"><a href="#c，SparkConf" class="headerlink" title="c，SparkConf"></a>c，SparkConf</h4><p>SparkConf 是一些配置信息。</p>
+<h4 id="d，Partitioner"><a href="#d，Partitioner" class="headerlink" title="d，Partitioner"></a>d，Partitioner</h4><p>Partitioner 决定了 RDD 的分区方式，目前两种主流的分区方式：Hash partioner 和 Range partitioner。Hash 就是对数据的 Key 进行散列分布，Rang 是按照 Key 的排序进行的分区。也可以自定义 Partitioner。</p>
+<p>具体可以参考这篇文章：<a href="https://blog.csdn.net/u011564172/article/details/54667057" target="_blank" rel="noopener">Spark RDD之Partitioner</a></p>
+<h4 id="e，Dependencies"><a href="#e，Dependencies" class="headerlink" title="e，Dependencies"></a>e，Dependencies</h4><p>Dependencies 也就是依赖关系，记录了该 RDD 的计算过程，也就是说这个 RDD 是通过哪个 RDD 经过怎么样的转化操作得到的。</p>
+<p>这里有个概念，根据每个 RDD 的分区计算后生成的新的 RDD 的分区的对应关系，可以分成窄依赖和宽依赖。</p>
+<p>窄依赖就是父 RDD 的分区可以一一对应到子 RDD 的分区，宽依赖是说父 RDD 的每个分区可以被多个子 RDD 分区使用。如图：</p>
+<p><img src="http://stonezhu.top//blog/52302.jpg" alt="窄依赖"></p>
+<p>由于窄依赖的特性，窄依赖允许子 RDD 的每个分区可以被并行处理产生，而且支持在同一个节点上链式执行多条指令，无需等待其它父 RDD 的分区操作。</p>
+<p><img src="http://stonezhu.top/blog/52303.jpg" alt="宽依赖"></p>
+<p>Spark 区分宽窄依赖的原因主要有两点：</p>
+<ol>
+<li>窄依赖支持在同一节点上进行链式操作，比如在执行了 map 后，紧接着执行 filter 操作。相反，款依赖需要所有父分区都是可用的。</li>
+<li>从失败恢复的角度考虑，窄依赖失败恢复更有效，因为只要重新计算丢失的父分区即可，而宽依赖涉及到 RDD 的各级多个父分区。</li>
+</ol>
+<h4 id="f，Checkpoint"><a href="#f，Checkpoint" class="headerlink" title="f，Checkpoint"></a>f，Checkpoint</h4><p>检查点机制，在计算过程中有一些比较耗时的 RDD，我们可以将它缓存到硬盘或者 HDFS 中，标记这个 RDD 有被检查点处理过，并且清空它的所有依赖关系。同时，给它新建一个依赖于 CheckpointRDD 的依赖关系，CheckpintRDD 可以用来从 硬盘中读取 RDD 和生成新的分区信息。</p>
+<p>这么做之后，当某个 RDD 需要错误恢复时，回溯到该 RDD，发现它被检查点记录过，就可以直接去硬盘读取该 RDD，无需重新计算。</p>
+<h4 id="g，Preferred-Location"><a href="#g，Preferred-Location" class="headerlink" title="g，Preferred Location"></a>g，Preferred Location</h4><p>针对每一个分片，都会选择一个最优的位置来计算，数据不动，代码动。</p>
+<h4 id="h，Storage-Level"><a href="#h，Storage-Level" class="headerlink" title="h，Storage Level"></a>h，Storage Level</h4><p>用来记录 RDD 持久化时存储的级别，常用的有：</p>
+<ol>
+<li>MEMORY_ONLY：只存在缓存中，如果内存不够，则不缓存剩余的部分。这是 RDD 默认的存储级别。</li>
+<li>MEMORY_AND_DISK：缓存在内存中，不够则缓存至内存。</li>
+<li>DISK_ONLY：只存硬盘。</li>
+<li>MEMORY_ONLY_2 和 MEMORY_AND_DISK_2等：与上面的级别和功能相同，只不过每个分区在集群两个节点上建立副本。</li>
+</ol>
+<h4 id="i，Iterator"><a href="#i，Iterator" class="headerlink" title="i，Iterator"></a>i，Iterator</h4><p>迭代函数和计算函数是用来表示 RDD 怎样通过父 RDD 计算得到的。</p>
+<p>迭代函数首先会判断缓存中是否有想要计算的 RDD，如果有就直接读取，如果没有就查找想要计算的 RDD 是否被检查点处理过。如果有，就直接读取，如果没有，就调用计算函数向上递归，查找父 RDD 进行计算。</p>
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Spark/" rel="tag"># Spark</a>
+          
+            <a href="/tags/RDD/" rel="tag"># RDD</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/BigData/2019-05-22-Spark-中-File-Block-Split-Task-Partition-RDD概念的理解.html" rel="next" title="Spark 中 File,Block,Split,Task,Partition,RDD概念的理解">
+                <i class="fa fa-chevron-left"></i> Spark 中 File,Block,Split,Task,Partition,RDD概念的理解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/BigData/2019-05-23-Spark-持久化机制和-Checkpoint-机制.html" rel="prev" title="Spark 持久化机制和 Checkpoint 机制">
+                Spark 持久化机制和 Checkpoint 机制 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="http://stonezhu.top/avatar.jpg" alt="朱磊">
+            
+              <p class="site-author-name" itemprop="name">朱磊</p>
+              <p class="site-description motion-element" itemprop="description">stone</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">86</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">11</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">69</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/Zzz468005600" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://zhulei.blog.csdn.net" target="_blank" title="CSDN"><i class="fa fa-fw fa-globe"></i>CSDN</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://www.jianshu.com/u/9f869537b90e" target="_blank" title="简书"><i class="fa fa-fw fa-heartbeat"></i>简书</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://juejin.im/user/5b246031e51d4558d43fb44d/posts" target="_blank" title="掘金"><i class="fa fa-fw fa-spinner"></i>掘金</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://blog.luliangdev.cn" title="LuLiangDev" target="_blank">LuLiangDev</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1，RDD-有三个基本特性"><span class="nav-text">1，RDD 有三个基本特性</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#a，-分区"><span class="nav-text">a， 分区</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#b，不可变"><span class="nav-text">b，不可变</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#c，并行操作"><span class="nav-text">c，并行操作</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2，RDD-的结构"><span class="nav-text">2，RDD 的结构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#a，Partitions"><span class="nav-text">a，Partitions</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#b，SparkContext"><span class="nav-text">b，SparkContext</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#c，SparkConf"><span class="nav-text">c，SparkConf</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#d，Partitioner"><span class="nav-text">d，Partitioner</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#e，Dependencies"><span class="nav-text">e，Dependencies</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#f，Checkpoint"><span class="nav-text">f，Checkpoint</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#g，Preferred-Location"><span class="nav-text">g，Preferred Location</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#h，Storage-Level"><span class="nav-text">h，Storage Level</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#i，Iterator"><span class="nav-text">i，Iterator</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">朱磊</span>
+
+  
+
+  
+</div>
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+  
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/reading_progress/reading_progress.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

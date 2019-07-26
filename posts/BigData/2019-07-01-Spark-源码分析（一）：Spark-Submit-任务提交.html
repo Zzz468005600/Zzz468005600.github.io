@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico?v=6.3.0">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+  <meta name="description" content="研究 Spark 内部是怎么运行的，怎么将 Spark 的任务从开始运行到结束的，先从 spark-submit 这个 shell 脚本提交用户程序开始。下面的分析都是基于 spark 2.1.1 版本。 我们一般提交 Spark 任务时，都会写一个如下的脚本，里面指定 spark-submit 脚本的位置，配置好一些参数，然后运行： 12345678./bin/spark-submit \  -">
+<meta name="keywords" content="Spark">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark 源码分析（一）：Spark Submit 任务提交">
+<meta property="og:url" content="http://zhuleiblog.com/posts/BigData/2019-07-01-Spark-源码分析（一）：Spark-Submit-任务提交.html">
+<meta property="og:site_name" content="朱磊">
+<meta property="og:description" content="研究 Spark 内部是怎么运行的，怎么将 Spark 的任务从开始运行到结束的，先从 spark-submit 这个 shell 脚本提交用户程序开始。下面的分析都是基于 spark 2.1.1 版本。 我们一般提交 Spark 任务时，都会写一个如下的脚本，里面指定 spark-submit 脚本的位置，配置好一些参数，然后运行： 12345678./bin/spark-submit \  -">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://stonezhu.top/blog/19070102.jpg">
+<meta property="og:updated_time" content="2019-07-01T09:25:14.040Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spark 源码分析（一）：Spark Submit 任务提交">
+<meta name="twitter:description" content="研究 Spark 内部是怎么运行的，怎么将 Spark 的任务从开始运行到结束的，先从 spark-submit 这个 shell 脚本提交用户程序开始。下面的分析都是基于 spark 2.1.1 版本。 我们一般提交 Spark 任务时，都会写一个如下的脚本，里面指定 spark-submit 脚本的位置，配置好一些参数，然后运行： 12345678./bin/spark-submit \  -">
+<meta name="twitter:image" content="http://stonezhu.top/blog/19070102.jpg">
+
+
+
+
+
+
+  <link rel="canonical" href="http://zhuleiblog.com/posts/BigData/2019-07-01-Spark-源码分析（一）：Spark-Submit-任务提交.html">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Spark 源码分析（一）：Spark Submit 任务提交 | 朱磊</title>
+  
+
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?084a44ac8106ee8c8af269853fa68cda";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">朱磊</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">select * from life</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签<span class="badge">69</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类<span class="badge">11</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">86</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+    <div class="reading-progress-bar"></div>
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/BigData/2019-07-01-Spark-源码分析（一）：Spark-Submit-任务提交.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="朱磊">
+      <meta itemprop="description" content="stone">
+      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="朱磊">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Spark 源码分析（一）：Spark Submit 任务提交
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-01 15:54:09" itemprop="dateCreated datePublished" datetime="2019-07-01T15:54:09+08:00">2019-07-01</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/BigData/" itemprop="url" rel="index"><span itemprop="name">BigData</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>研究 Spark 内部是怎么运行的，怎么将 Spark 的任务从开始运行到结束的，先从 spark-submit 这个 shell 脚本提交用户程序开始。下面的分析都是基于 spark 2.1.1 版本。</p>
+<p>我们一般提交 Spark 任务时，都会写一个如下的脚本，里面指定 spark-submit 脚本的位置，配置好一些参数，然后运行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">./bin/spark-submit \</span><br><span class="line">  --class &lt;main-class&gt; \</span><br><span class="line">  --master &lt;master-url&gt; \</span><br><span class="line">  --deploy-mode &lt;deploy-mode&gt; \</span><br><span class="line">  --conf &lt;key&gt;=&lt;value&gt; \</span><br><span class="line">  ... # other options</span><br><span class="line">  &lt;application-jar&gt; \</span><br><span class="line">  [application-arguments]</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+<p>上面那个脚本实际上会将参数带到 spark-submit 脚本中去执行，看一下 spark-submit 脚本：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">if [ -z "$&#123;SPARK_HOME&#125;" ]; then</span><br><span class="line">  source "$(dirname "$0")"/find-spark-home</span><br><span class="line">fi  # disable randomized hash for string in Python 3.3+</span><br><span class="line">export PYTHONHASHSEED=0</span><br><span class="line"></span><br><span class="line">exec "$&#123;SPARK_HOME&#125;"/bin/spark-class org.apache.spark.deploy.SparkSubmit "$@"</span><br></pre></td></tr></table></figure>
+<p>脚本最后调用 exec 执行 “${SPARK_HOME}”/bin/spark-class，调用的 class 为：<code>org.apache.spark.deploy.SparkSubmit</code>，后面的 “\$@” 是脚本执行的所有参数。</p>
+<p>通过 spark-class 脚本，最终执行的命令中，制定了程序的入口为<code>org.apache.spark.deploy.SparkSubmit</code>。</p>
+<h3 id="一，org-apache-spark-deploy-SparkSubmit"><a href="#一，org-apache-spark-deploy-SparkSubmit" class="headerlink" title="一，org.apache.spark.deploy.SparkSubmit"></a>一，org.apache.spark.deploy.SparkSubmit</h3><h4 id="1，main-方法"><a href="#1，main-方法" class="headerlink" title="1，main 方法"></a>1，main 方法</h4><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">main</span></span>(args: <span class="type">Array</span>[<span class="type">String</span>]): <span class="type">Unit</span> = &#123;</span><br><span class="line">    <span class="keyword">val</span> appArgs = <span class="keyword">new</span> <span class="type">SparkSubmitArguments</span>(args)</span><br><span class="line">    <span class="keyword">if</span> (appArgs.verbose) &#123;</span><br><span class="line">      <span class="comment">// scalastyle:off println</span></span><br><span class="line">      printStream.println(appArgs)</span><br><span class="line">      <span class="comment">// scalastyle:on println</span></span><br><span class="line">    &#125;</span><br><span class="line">    appArgs.action <span class="keyword">match</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> <span class="type">SparkSubmitAction</span>.<span class="type">SUBMIT</span> =&gt; submit(appArgs)</span><br><span class="line">      <span class="keyword">case</span> <span class="type">SparkSubmitAction</span>.<span class="type">KILL</span> =&gt; kill(appArgs)</span><br><span class="line">      <span class="keyword">case</span> <span class="type">SparkSubmitAction</span>.<span class="type">REQUEST_STATUS</span> =&gt; requestStatus(appArgs)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>从 main 方法中可以看出，根据解析后的参数中的 action 进行模式匹配，是什么操作就执行什么方法，我们这边是 submit 操作，则调用 submit 方法。</p>
+<h4 id="2，submit-方法"><a href="#2，submit-方法" class="headerlink" title="2，submit 方法"></a>2，submit 方法</h4><p>submit 方法做两件事情，第一件事为通过 clusterManager 和 dploymode 去决定下一步要执行的类的 main 方法，第二件事是根据反射执行这个 main 方法。</p>
+<h5 id="2-1，submit-方法第一步"><a href="#2-1，submit-方法第一步" class="headerlink" title="2.1，submit 方法第一步"></a>2.1，submit 方法第一步</h5><p>这部分主要是准备下一步要执行的相关类及参数：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">def</span> <span class="title">submit</span></span>(args: <span class="type">SparkSubmitArguments</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    <span class="keyword">val</span> (childArgs, childClasspath, sysProps, childMainClass) = prepareSubmitEnvironment(args)</span><br></pre></td></tr></table></figure>
+<h6 id="2-1-1，prepareSubmitEnvironment-方法"><a href="#2-1-1，prepareSubmitEnvironment-方法" class="headerlink" title="2.1.1，prepareSubmitEnvironment 方法"></a>2.1.1，prepareSubmitEnvironment 方法</h6><p>通过调用 <code>prepareSubmitEnvironment</code> 方法来准备下一步要执行的类的 main 方法及相关参数，看一下这个方法，下面这部分是根据参数中的 master 和 deploy-mode 来设置对应的 cluasterManager 和部署模式：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span>[deploy] <span class="function"><span class="keyword">def</span> <span class="title">prepareSubmitEnvironment</span></span>(args: <span class="type">SparkSubmitArguments</span>)</span><br><span class="line">      : (<span class="type">Seq</span>[<span class="type">String</span>], <span class="type">Seq</span>[<span class="type">String</span>], <span class="type">Map</span>[<span class="type">String</span>, <span class="type">String</span>], <span class="type">String</span>) = &#123;</span><br><span class="line">    <span class="comment">// 要返回的四个参数</span></span><br><span class="line">    <span class="keyword">val</span> childArgs = <span class="keyword">new</span> <span class="type">ArrayBuffer</span>[<span class="type">String</span>]()</span><br><span class="line">    <span class="keyword">val</span> childClasspath = <span class="keyword">new</span> <span class="type">ArrayBuffer</span>[<span class="type">String</span>]()</span><br><span class="line">    <span class="keyword">val</span> sysProps = <span class="keyword">new</span> <span class="type">HashMap</span>[<span class="type">String</span>, <span class="type">String</span>]()</span><br><span class="line">    <span class="keyword">var</span> childMainClass = <span class="string">""</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 根据脚本中配置的 master 参数去模式匹配出 clusterManager</span></span><br><span class="line">    <span class="keyword">val</span> clusterManager: <span class="type">Int</span> = args.master <span class="keyword">match</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> <span class="string">"yarn"</span> =&gt; <span class="type">YARN</span></span><br><span class="line">      <span class="keyword">case</span> <span class="string">"yarn-client"</span> | <span class="string">"yarn-cluster"</span> =&gt;</span><br><span class="line">        printWarning(<span class="string">s"Master <span class="subst">$&#123;args.master&#125;</span> is deprecated since 2.0."</span> +</span><br><span class="line">          <span class="string">" Please use master \"yarn\" with specified deploy mode instead."</span>)</span><br><span class="line">        <span class="type">YARN</span></span><br><span class="line">      <span class="keyword">case</span> m <span class="keyword">if</span> m.startsWith(<span class="string">"spark"</span>) =&gt; <span class="type">STANDALONE</span></span><br><span class="line">      <span class="keyword">case</span> m <span class="keyword">if</span> m.startsWith(<span class="string">"mesos"</span>) =&gt; <span class="type">MESOS</span></span><br><span class="line">      <span class="keyword">case</span> m <span class="keyword">if</span> m.startsWith(<span class="string">"local"</span>) =&gt; <span class="type">LOCAL</span></span><br><span class="line">      <span class="keyword">case</span> _ =&gt;</span><br><span class="line">        printErrorAndExit(<span class="string">"Master must either be yarn or start with spark, mesos, local"</span>)</span><br><span class="line">        <span class="number">-1</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 根据 deployMode 参数去模式匹配出部署模式</span></span><br><span class="line">    <span class="keyword">var</span> deployMode: <span class="type">Int</span> = args.deployMode <span class="keyword">match</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> <span class="string">"client"</span> | <span class="literal">null</span> =&gt; <span class="type">CLIENT</span></span><br><span class="line">      <span class="keyword">case</span> <span class="string">"cluster"</span> =&gt; <span class="type">CLUSTER</span></span><br><span class="line">      <span class="keyword">case</span> _ =&gt; printErrorAndExit(<span class="string">"Deploy mode must be either client or cluster"</span>); <span class="number">-1</span></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>然后会根据上面匹配出的集群以及部署模式决定怎么提交 application，我们这边看一下 standalone 集群部署模式，看下面这部分代码：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// standalone cluster 模式下的 childMainClass 以及参数的配置</span></span><br><span class="line">  <span class="keyword">if</span> (args.isStandaloneCluster) &#123;</span><br><span class="line">    <span class="comment">//如果参数中配置了 useRest 则为 RestSubmissionClient 的方式去提交 application</span></span><br><span class="line">    <span class="keyword">if</span> (args.useRest) &#123;</span><br><span class="line">      childMainClass = <span class="string">"org.apache.spark.deploy.rest.RestSubmissionClient"</span></span><br><span class="line">      childArgs += (args.primaryResource, args.mainClass)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">// 否则使用 Client 放是去提交 application</span></span><br><span class="line">      childMainClass = <span class="string">"org.apache.spark.deploy.Client"</span></span><br><span class="line">      <span class="keyword">if</span> (args.supervise) &#123; childArgs += <span class="string">"--supervise"</span> &#125;</span><br><span class="line">      <span class="type">Option</span>(args.driverMemory).foreach &#123; m =&gt; childArgs += (<span class="string">"--memory"</span>, m) &#125;</span><br><span class="line">      <span class="type">Option</span>(args.driverCores).foreach &#123; c =&gt; childArgs += (<span class="string">"--cores"</span>, c) &#125;</span><br><span class="line">      childArgs += <span class="string">"launch"</span></span><br><span class="line">      childArgs += (args.master, args.primaryResource, args.mainClass)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (args.childArgs != <span class="literal">null</span>) &#123;</span><br><span class="line">      childArgs ++= args.childArgs</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>在 standalone 集群模式下，有两个提交网关：</p>
+<p>1，使用 <code>org.apache.spark.deploy.Client</code> 作为包装器来使用传统的 RPC 网关；</p>
+<p>2，使用 Spark 1.3 中引入的基于 rest 的网关。</p>
+<h5 id="2-2，submit-方法第二步"><a href="#2-2，submit-方法第二步" class="headerlink" title="2.2，submit 方法第二步"></a>2.2，submit 方法第二步</h5><p>这里我们的参数已经准备好了，然后根据我们 standalone cluster 部署模式决定下一步怎么执行：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*  在standalone集群模式下，有两个提交网关：</span></span><br><span class="line"><span class="comment">  *   1.使用org.apache.spark.deploy.Client作为包装器来使用传统的RPC网关</span></span><br><span class="line"><span class="comment">  *   2.Spark 1.3中引入的基于rest的网关</span></span><br><span class="line"><span class="comment">  *   第二种方法是Spark 1.3的默认行为，但是Spark submit将会失败</span></span><br><span class="line"><span class="comment">  *   如果master不是一个REST服务器，那么它将无法使用REST网关。</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"><span class="keyword">if</span> (args.isStandaloneCluster &amp;&amp; args.useRest) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="comment">// scalastyle:off println</span></span><br><span class="line">      printStream.println(<span class="string">"Running Spark using the REST application submission protocol."</span>)</span><br><span class="line">      <span class="comment">// scalastyle:on println</span></span><br><span class="line">      doRunMain()</span><br><span class="line">    &#125; <span class="keyword">catch</span> &#123;</span><br><span class="line">      <span class="comment">// Fail over to use the legacy submission gateway</span></span><br><span class="line">      <span class="keyword">case</span> e: <span class="type">SubmitRestConnectionException</span> =&gt;</span><br><span class="line">        printWarning(<span class="string">s"Master endpoint <span class="subst">$&#123;args.master&#125;</span> was not a REST server. "</span> +</span><br><span class="line">          <span class="string">"Falling back to legacy submission gateway instead."</span>)</span><br><span class="line">        args.useRest = <span class="literal">false</span></span><br><span class="line">        submit(args)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// 其他模式，直接调用doRunMain方法</span></span><br><span class="line">    doRunMain()</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>接着会调用到 doRunMain 方法，内部其实调用了 runMain 方法，所以我们直接看 runMain 方法。</p>
+<h6 id="2-2-1，runMain-方法"><a href="#2-2-1，runMain-方法" class="headerlink" title="2.2.1，runMain 方法"></a>2.2.1，runMain 方法</h6><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//实际上这个方法就是根据我们上面 prepareSubmitEnvironment 方法准备好的参数，通过反射的方法去执行我们</span></span><br><span class="line"><span class="comment">//下一步要执行的类及方法</span></span><br><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">def</span> <span class="title">runMain</span></span>(</span><br><span class="line">      childArgs: <span class="type">Seq</span>[<span class="type">String</span>],</span><br><span class="line">      childClasspath: <span class="type">Seq</span>[<span class="type">String</span>],</span><br><span class="line">      sysProps: <span class="type">Map</span>[<span class="type">String</span>, <span class="type">String</span>],</span><br><span class="line">      childMainClass: <span class="type">String</span>,</span><br><span class="line">      verbose: <span class="type">Boolean</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    <span class="comment">// scalastyle:off println</span></span><br><span class="line">    <span class="keyword">if</span> (verbose) &#123;</span><br><span class="line">      printStream.println(<span class="string">s"Main class:\n<span class="subst">$childMainClass</span>"</span>)</span><br><span class="line">      printStream.println(<span class="string">s"Arguments:\n<span class="subst">$&#123;childArgs.mkString("\n")&#125;</span>"</span>)</span><br><span class="line">      printStream.println(<span class="string">s"System properties:\n<span class="subst">$&#123;sysProps.mkString("\n")&#125;</span>"</span>)</span><br><span class="line">      printStream.println(<span class="string">s"Classpath elements:\n<span class="subst">$&#123;childClasspath.mkString("\n")&#125;</span>"</span>)</span><br><span class="line">      printStream.println(<span class="string">"\n"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// scalastyle:on println</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> loader =</span><br><span class="line">      <span class="keyword">if</span> (sysProps.getOrElse(<span class="string">"spark.driver.userClassPathFirst"</span>, <span class="string">"false"</span>).toBoolean) &#123;</span><br><span class="line">        <span class="keyword">new</span> <span class="type">ChildFirstURLClassLoader</span>(<span class="keyword">new</span> <span class="type">Array</span>[<span class="type">URL</span>](<span class="number">0</span>),</span><br><span class="line">          <span class="type">Thread</span>.currentThread.getContextClassLoader)</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">new</span> <span class="type">MutableURLClassLoader</span>(<span class="keyword">new</span> <span class="type">Array</span>[<span class="type">URL</span>](<span class="number">0</span>),</span><br><span class="line">          <span class="type">Thread</span>.currentThread.getContextClassLoader)</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="type">Thread</span>.currentThread.setContextClassLoader(loader)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (jar &lt;- childClasspath) &#123;</span><br><span class="line">      addJarToClasspath(jar, loader)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> ((key, value) &lt;- sysProps) &#123;</span><br><span class="line">      <span class="type">System</span>.setProperty(key, value)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> mainClass: <span class="type">Class</span>[_] = <span class="literal">null</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      mainClass = <span class="type">Utils</span>.classForName(childMainClass)</span><br><span class="line">    &#125; <span class="keyword">catch</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> e: <span class="type">ClassNotFoundException</span> =&gt;</span><br><span class="line">        e.printStackTrace(printStream)</span><br><span class="line">        <span class="keyword">if</span> (childMainClass.contains(<span class="string">"thriftserver"</span>)) &#123;</span><br><span class="line">          <span class="comment">// scalastyle:off println</span></span><br><span class="line">          printStream.println(<span class="string">s"Failed to load main class <span class="subst">$childMainClass</span>."</span>)</span><br><span class="line">          printStream.println(<span class="string">"You need to build Spark with -Phive and -Phive-thriftserver."</span>)</span><br><span class="line">          <span class="comment">// scalastyle:on println</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="type">System</span>.exit(<span class="type">CLASS_NOT_FOUND_EXIT_STATUS</span>)</span><br><span class="line">      <span class="keyword">case</span> e: <span class="type">NoClassDefFoundError</span> =&gt;</span><br><span class="line">        e.printStackTrace(printStream)</span><br><span class="line">        <span class="keyword">if</span> (e.getMessage.contains(<span class="string">"org/apache/hadoop/hive"</span>)) &#123;</span><br><span class="line">          <span class="comment">// scalastyle:off println</span></span><br><span class="line">          printStream.println(<span class="string">s"Failed to load hive class."</span>)</span><br><span class="line">          printStream.println(<span class="string">"You need to build Spark with -Phive and -Phive-thriftserver."</span>)</span><br><span class="line">          <span class="comment">// scalastyle:on println</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="type">System</span>.exit(<span class="type">CLASS_NOT_FOUND_EXIT_STATUS</span>)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// SPARK-4170</span></span><br><span class="line">    <span class="keyword">if</span> (classOf[scala.<span class="type">App</span>].isAssignableFrom(mainClass)) &#123;</span><br><span class="line">      printWarning(<span class="string">"Subclasses of scala.App may not work correctly. Use a main() method instead."</span>)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> mainMethod = mainClass.getMethod(<span class="string">"main"</span>, <span class="keyword">new</span> <span class="type">Array</span>[<span class="type">String</span>](<span class="number">0</span>).getClass)</span><br><span class="line">    <span class="keyword">if</span> (!<span class="type">Modifier</span>.isStatic(mainMethod.getModifiers)) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalStateException</span>(<span class="string">"The main method in the given main class must be static"</span>)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@tailrec</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">findCause</span></span>(t: <span class="type">Throwable</span>): <span class="type">Throwable</span> = t <span class="keyword">match</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> e: <span class="type">UndeclaredThrowableException</span> =&gt;</span><br><span class="line">        <span class="keyword">if</span> (e.getCause() != <span class="literal">null</span>) findCause(e.getCause()) <span class="keyword">else</span> e</span><br><span class="line">      <span class="keyword">case</span> e: <span class="type">InvocationTargetException</span> =&gt;</span><br><span class="line">        <span class="keyword">if</span> (e.getCause() != <span class="literal">null</span>) findCause(e.getCause()) <span class="keyword">else</span> e</span><br><span class="line">      <span class="keyword">case</span> e: <span class="type">Throwable</span> =&gt;</span><br><span class="line">        e</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="comment">//通过反射去执行准备好的 mainClass 的 main 方法</span></span><br><span class="line">      mainMethod.invoke(<span class="literal">null</span>, childArgs.toArray)</span><br><span class="line">    &#125; <span class="keyword">catch</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> t: <span class="type">Throwable</span> =&gt;</span><br><span class="line">        findCause(t) <span class="keyword">match</span> &#123;</span><br><span class="line">          <span class="keyword">case</span> <span class="type">SparkUserAppException</span>(exitCode) =&gt;</span><br><span class="line">            <span class="type">System</span>.exit(exitCode)</span><br><span class="line"></span><br><span class="line">          <span class="keyword">case</span> t: <span class="type">Throwable</span> =&gt;</span><br><span class="line">            <span class="keyword">throw</span> t</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>我们选取的 standalone cluster 模式去分析的，根据上面的 prepareSubmitEnvironment 方法可以知道我们要使用 <code>org.apache.spark.deploy.Client</code> 这个 childMainClass，然后根据上面的代码知道，我们下一步是将相关参数带进 <code>org.apache.spark.deploy.Client</code> 这个类的 main 方法中去执行。</p>
+<p>所以下面开始看 <code>org.apache.spark.deploy.Client</code></p>
+<h3 id="二，org-apache-spark-deploy-Client"><a href="#二，org-apache-spark-deploy-Client" class="headerlink" title="二，org.apache.spark.deploy.Client"></a>二，org.apache.spark.deploy.Client</h3><p>Client 用于启动和终止 standalone 集群中的 Driver 程序。</p>
+<h4 id="1，main-方法-1"><a href="#1，main-方法-1" class="headerlink" title="1，main 方法"></a>1，main 方法</h4><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">main</span></span>(args: <span class="type">Array</span>[<span class="type">String</span>]) &#123;</span><br><span class="line">    <span class="comment">// scalastyle:off println</span></span><br><span class="line">    <span class="keyword">if</span> (!sys.props.contains(<span class="string">"SPARK_SUBMIT"</span>)) &#123;</span><br><span class="line">      println(<span class="string">"WARNING: This client is deprecated and will be removed in a future version of Spark"</span>)</span><br><span class="line">      println(<span class="string">"Use ./bin/spark-submit with \"--master spark://host:port\""</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// scalastyle:on println</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> conf = <span class="keyword">new</span> <span class="type">SparkConf</span>()</span><br><span class="line">    <span class="keyword">val</span> driverArgs = <span class="keyword">new</span> <span class="type">ClientArguments</span>(args)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!conf.contains(<span class="string">"spark.rpc.askTimeout"</span>)) &#123;</span><br><span class="line">      conf.set(<span class="string">"spark.rpc.askTimeout"</span>, <span class="string">"10s"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">Logger</span>.getRootLogger.setLevel(driverArgs.logLevel)</span><br><span class="line"></span><br><span class="line">  <span class="comment">//创建 rpcEnv</span></span><br><span class="line">    <span class="keyword">val</span> rpcEnv =</span><br><span class="line">      <span class="type">RpcEnv</span>.create(<span class="string">"driverClient"</span>, <span class="type">Utils</span>.localHostName(), <span class="number">0</span>, conf, <span class="keyword">new</span> <span class="type">SecurityManager</span>(conf))</span><br><span class="line"></span><br><span class="line">  <span class="comment">//获取 master 节点的 RpcEndPoint 的引用，用于和 master 进行 Rpc 通信</span></span><br><span class="line">    <span class="keyword">val</span> masterEndpoints = driverArgs.masters.map(<span class="type">RpcAddress</span>.fromSparkURL).</span><br><span class="line">      map(rpcEnv.setupEndpointRef(_, <span class="type">Master</span>.<span class="type">ENDPOINT_NAME</span>))</span><br><span class="line">  </span><br><span class="line">  <span class="comment">//注册 rpcEndpoint，调用 onStart方法</span></span><br><span class="line">    rpcEnv.setupEndpoint(<span class="string">"client"</span>, <span class="keyword">new</span> <span class="type">ClientEndpoint</span>(rpcEnv, driverArgs, masterEndpoints, conf))</span><br><span class="line"></span><br><span class="line">  <span class="comment">//</span></span><br><span class="line">    rpcEnv.awaitTermination()</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>这里开始创建 rpcEnv 了，关于 Rpc 这块的知识点，可以看前面这篇文章了解一下：<a href="https://zhulei.blog.csdn.net/article/details/94385385" target="_blank" rel="noopener">Spark 中的 RPC</a>，拿到 master 的 rpcEndpoint 的引用去注册 rpcEndpoint，这里会去调用 ClientEndpoint 的 onstart 方法。</p>
+<h3 id="三，org-apache-spark-deploy-ClientEndpoint"><a href="#三，org-apache-spark-deploy-ClientEndpoint" class="headerlink" title="三，org.apache.spark.deploy.ClientEndpoint"></a>三，org.apache.spark.deploy.ClientEndpoint</h3><p>ClientEndPoint 是一个 ThreadSafeRpcEndpoint，下面看下它的 onStart 方法。</p>
+<h4 id="1，onStart-方法"><a href="#1，onStart-方法" class="headerlink" title="1，onStart 方法"></a>1，onStart 方法</h4><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">onStart</span></span>(): <span class="type">Unit</span> = &#123;</span><br><span class="line">    driverArgs.cmd <span class="keyword">match</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> <span class="string">"launch"</span> =&gt;</span><br><span class="line">        <span class="comment">// <span class="doctag">TODO:</span> We could add an env variable here and intercept it in `sc.addJar` that would</span></span><br><span class="line">        <span class="comment">//       truncate filesystem paths similar to what YARN does. For now, we just require</span></span><br><span class="line">        <span class="comment">//       people call `addJar` assuming the jar is in the same directory.</span></span><br><span class="line">        <span class="keyword">val</span> mainClass = <span class="string">"org.apache.spark.deploy.worker.DriverWrapper"</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">val</span> classPathConf = <span class="string">"spark.driver.extraClassPath"</span></span><br><span class="line">        <span class="keyword">val</span> classPathEntries = sys.props.get(classPathConf).toSeq.flatMap &#123; cp =&gt;</span><br><span class="line">          cp.split(java.io.<span class="type">File</span>.pathSeparator)</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">val</span> libraryPathConf = <span class="string">"spark.driver.extraLibraryPath"</span></span><br><span class="line">        <span class="keyword">val</span> libraryPathEntries = sys.props.get(libraryPathConf).toSeq.flatMap &#123; cp =&gt;</span><br><span class="line">          cp.split(java.io.<span class="type">File</span>.pathSeparator)</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">val</span> extraJavaOptsConf = <span class="string">"spark.driver.extraJavaOptions"</span></span><br><span class="line">        <span class="keyword">val</span> extraJavaOpts = sys.props.get(extraJavaOptsConf)</span><br><span class="line">          .map(<span class="type">Utils</span>.splitCommandString).getOrElse(<span class="type">Seq</span>.empty)</span><br><span class="line">        <span class="keyword">val</span> sparkJavaOpts = <span class="type">Utils</span>.sparkJavaOpts(conf)</span><br><span class="line">        <span class="keyword">val</span> javaOpts = sparkJavaOpts ++ extraJavaOpts</span><br><span class="line">      </span><br><span class="line">      	<span class="comment">// 将classPathEntries,libraryPathEntries,javaOpts,drvierArgs信息封装成Command</span></span><br><span class="line">        <span class="comment">//  这里的mainClass为org.apache.spark.deploy.worker.DriverWrapper</span></span><br><span class="line">        <span class="keyword">val</span> command = <span class="keyword">new</span> <span class="type">Command</span>(mainClass,</span><br><span class="line">          <span class="type">Seq</span>(<span class="string">"&#123;&#123;WORKER_URL&#125;&#125;"</span>, <span class="string">"&#123;&#123;USER_JAR&#125;&#125;"</span>, driverArgs.mainClass) ++ driverArgs.driverOptions,</span><br><span class="line">          sys.env, classPathEntries, libraryPathEntries, javaOpts)</span><br><span class="line">				</span><br><span class="line">      	<span class="comment">//  将drvierArgs，command信息封装成DriverDescription</span></span><br><span class="line">        <span class="keyword">val</span> driverDescription = <span class="keyword">new</span> <span class="type">DriverDescription</span>(</span><br><span class="line">          driverArgs.jarUrl,</span><br><span class="line">          driverArgs.memory,</span><br><span class="line">          driverArgs.cores,</span><br><span class="line">          driverArgs.supervise,</span><br><span class="line">          command)</span><br><span class="line">      </span><br><span class="line">      	<span class="comment">//  向master发送RequestSubmitDriver,注册Driver</span></span><br><span class="line">        ayncSendToMasterAndForwardReply[<span class="type">SubmitDriverResponse</span>](</span><br><span class="line">          <span class="type">RequestSubmitDriver</span>(driverDescription))</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> <span class="string">"kill"</span> =&gt;</span><br><span class="line">        <span class="keyword">val</span> driverId = driverArgs.driverId</span><br><span class="line">        ayncSendToMasterAndForwardReply[<span class="type">KillDriverResponse</span>](<span class="type">RequestKillDriver</span>(driverId))</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>这里也会根据 cmd 进行模式匹配，，如果命令为 launch，就去获取 driver 的额外的 java 依赖，classpath，java 配置。然后将这些信息封装为一个 Command 对象，再降 driver 的参数和 command 信息一起封装成 DriverDescription 对象，调用 ayncSendToMasterAndForwardReply 发送信息。</p>
+<h4 id="2，ayncSendToMasterAndForwardReply-方法"><a href="#2，ayncSendToMasterAndForwardReply-方法" class="headerlink" title="2，ayncSendToMasterAndForwardReply 方法"></a>2，ayncSendToMasterAndForwardReply 方法</h4><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">def</span> <span class="title">ayncSendToMasterAndForwardReply</span></span>[<span class="type">T</span>: <span class="type">ClassTag</span>](message: <span class="type">Any</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    <span class="keyword">for</span> (masterEndpoint &lt;- masterEndpoints) &#123;</span><br><span class="line">      masterEndpoint.ask[<span class="type">T</span>](message).onComplete &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">Success</span>(v) =&gt; self.send(v)</span><br><span class="line">        <span class="keyword">case</span> <span class="type">Failure</span>(e) =&gt;</span><br><span class="line">          logWarning(<span class="string">s"Error sending messages to master <span class="subst">$masterEndpoint</span>"</span>, e)</span><br><span class="line">      &#125;(forwardMessageExecutionContext)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>这个方法实际上就是将信息发送到 masterEndpoint 上去。</p>
+<h3 id="四，总结"><a href="#四，总结" class="headerlink" title="四，总结"></a>四，总结</h3><p>至此，我们整个 spark-submit 任务提交就完成了，接下来就是等待 master 返回 driver 的注册结果，启动 driver。</p>
+<p>最后可以看一下 spark-submit 过程的流程图：</p>
+<p><img src="http://stonezhu.top/blog/19070102.jpg" alt></p>
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Spark/" rel="tag"># Spark</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/BigData/2019-07-01-Spark-中的-RPC.html" rel="next" title="Spark 中的 RPC">
+                <i class="fa fa-chevron-left"></i> Spark 中的 RPC
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/BigData/2019-07-01-Spark-源码分析（二）-Driver-注册及启动.html" rel="prev" title="Spark 源码分析（二）: Driver 注册及启动">
+                Spark 源码分析（二）: Driver 注册及启动 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="http://stonezhu.top/avatar.jpg" alt="朱磊">
+            
+              <p class="site-author-name" itemprop="name">朱磊</p>
+              <p class="site-description motion-element" itemprop="description">stone</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">86</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">11</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">69</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/Zzz468005600" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://zhulei.blog.csdn.net" target="_blank" title="CSDN"><i class="fa fa-fw fa-globe"></i>CSDN</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://www.jianshu.com/u/9f869537b90e" target="_blank" title="简书"><i class="fa fa-fw fa-heartbeat"></i>简书</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://juejin.im/user/5b246031e51d4558d43fb44d/posts" target="_blank" title="掘金"><i class="fa fa-fw fa-spinner"></i>掘金</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://blog.luliangdev.cn" title="LuLiangDev" target="_blank">LuLiangDev</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#一，org-apache-spark-deploy-SparkSubmit"><span class="nav-text">一，org.apache.spark.deploy.SparkSubmit</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1，main-方法"><span class="nav-text">1，main 方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2，submit-方法"><span class="nav-text">2，submit 方法</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1，submit-方法第一步"><span class="nav-text">2.1，submit 方法第一步</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#2-1-1，prepareSubmitEnvironment-方法"><span class="nav-text">2.1.1，prepareSubmitEnvironment 方法</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2，submit-方法第二步"><span class="nav-text">2.2，submit 方法第二步</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#2-2-1，runMain-方法"><span class="nav-text">2.2.1，runMain 方法</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#二，org-apache-spark-deploy-Client"><span class="nav-text">二，org.apache.spark.deploy.Client</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1，main-方法-1"><span class="nav-text">1，main 方法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#三，org-apache-spark-deploy-ClientEndpoint"><span class="nav-text">三，org.apache.spark.deploy.ClientEndpoint</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1，onStart-方法"><span class="nav-text">1，onStart 方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2，ayncSendToMasterAndForwardReply-方法"><span class="nav-text">2，ayncSendToMasterAndForwardReply 方法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#四，总结"><span class="nav-text">四，总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">朱磊</span>
+
+  
+
+  
+</div>
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+  
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/reading_progress/reading_progress.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
