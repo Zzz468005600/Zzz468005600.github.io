@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://zhuleiblog.com/posts/Blog/2019-07-26-hexo-%E5%8D%9A%E5%AE%A2%E8%BF%81%E7%A7%BB.html</loc>
+    
+    <lastmod>2019-07-26T01:27:38.054Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://zhuleiblog.com/posts/Java/2019-07-12-JVM-%E5%A0%86%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E4%B8%8E-GC-%E7%AD%96%E7%95%A5.html</loc>
     
     <lastmod>2019-07-12T06:47:21.200Z</lastmod>
