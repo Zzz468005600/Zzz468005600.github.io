@@ -246,7 +246,7 @@
           
           <li class="menu-item menu-item-archives">
     <a href="/archives/" rel="section">
-      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">87</span></a>
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">89</span></a>
   </li>
         
         
@@ -288,6 +288,328 @@
           <div id="content" class="content">
             
   <section id="posts" class="posts-expand">
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/BigData/2019-07-02-Spark-源码分析（五）-Executor-启动.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="朱磊">
+      <meta itemprop="description" content="stone">
+      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="朱磊">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/posts/BigData/2019-07-02-Spark-源码分析（五）-Executor-启动.html" itemprop="url">
+                  Spark 源码分析（五）: Executor 启动
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-02 16:14:09" itemprop="dateCreated datePublished" datetime="2019-07-02T16:14:09+08:00">2019-07-02</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/BigData/" itemprop="url" rel="index"><span itemprop="name">BigData</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>上一篇已经将 Application 注册到了 master 上了，在 master 收到注册消息后会进行一系列操作，最后调用 schedule 方法。</p>
+<p>这个 schedule 方法会去做两件事，一件事是给等待调度的 driver 分配资源，另一件事是给等待调度的 application 去分配资源启动 Executor。</p>
+<p>给 application 分配资源启动 Executor 的代码最终会调用一个方法：launchExecutor（是 Master 中的代码）。</p>
+<p>在 lauchExecutor 方法中会先向 worker 发送 lauchExecutor 消息，然后会向 driver 发送 executor 已经启动的消息。</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/posts/BigData/2019-07-02-Spark-源码分析（五）-Executor-启动.html#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/BigData/2019-07-02-Spark-源码分析（四）-Application-的注册.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="朱磊">
+      <meta itemprop="description" content="stone">
+      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="朱磊">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/posts/BigData/2019-07-02-Spark-源码分析（四）-Application-的注册.html" itemprop="url">
+                  Spark 源码分析（四）: Application 的注册
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-02 13:56:01" itemprop="dateCreated datePublished" datetime="2019-07-02T13:56:01+08:00">2019-07-02</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/BigData/" itemprop="url" rel="index"><span itemprop="name">BigData</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>在前面一篇文章中分析到了 SparkContext 中的 TaskScheduler 创建及启动。</p>
+<p>在 StandaloneSchedulerBackend  start 代码里除了创建了一个 DriverEndpoint 用于 standalone 模式下用来和 Executor 通信之外还会创建一个 AppClient。</p>
+<p>这个 AppClient 会向 Master 注册 Application，然后 Master 会通过 Application 的信息为它分配 Worker。</p>
+<p>创建这个 AppClient 对象之前会去获取一些必要的参数。</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/posts/BigData/2019-07-02-Spark-源码分析（四）-Application-的注册.html#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
     
       
 
@@ -1615,326 +1937,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/BigData/2019-06-26-Spark-的-cogroup-和-join-算子.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="朱磊">
-      <meta itemprop="description" content="stone">
-      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="朱磊">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/posts/BigData/2019-06-26-Spark-的-cogroup-和-join-算子.html" itemprop="url">
-                  Spark 的 cogroup 和 join 算子
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2019-06-26 17:35:59" itemprop="dateCreated datePublished" datetime="2019-06-26T17:35:59+08:00">2019-06-26</time>
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/BigData/" itemprop="url" rel="index"><span itemprop="name">BigData</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>cogroup 这个算子使用的频率很低，join 算子使用频率较高，两者都是根据两个 RDD 的 key 进行关联。具体看下面的代码，先看下面的 2 个 RDD：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">SparkConf conf = <span class="keyword">new</span> SparkConf()</span><br><span class="line">                .setAppName(<span class="string">"co"</span>)</span><br><span class="line">                .setMaster(<span class="string">"local"</span>);</span><br><span class="line">        JavaSparkContext sc = <span class="keyword">new</span> JavaSparkContext(conf);</span><br><span class="line"></span><br><span class="line">        List&lt;Tuple2&lt;String, Integer&gt;&gt; words1 = Arrays.asList(</span><br><span class="line">                <span class="keyword">new</span> Tuple2&lt;&gt;(<span class="string">"hello"</span>, <span class="number">3</span>),</span><br><span class="line">                <span class="keyword">new</span> Tuple2&lt;&gt;(<span class="string">"hello"</span>, <span class="number">2</span>),</span><br><span class="line">                <span class="keyword">new</span> Tuple2&lt;&gt;(<span class="string">"world"</span>, <span class="number">7</span>),</span><br><span class="line">                <span class="keyword">new</span> Tuple2&lt;&gt;(<span class="string">"hello"</span>, <span class="number">12</span>),</span><br><span class="line">                <span class="keyword">new</span> Tuple2&lt;&gt;(<span class="string">"you"</span>, <span class="number">9</span>)</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">        List&lt;Tuple2&lt;String, Integer&gt;&gt; words2 = Arrays.asList(</span><br><span class="line">                <span class="keyword">new</span> Tuple2&lt;&gt;(<span class="string">"hello"</span>, <span class="number">21</span>),</span><br><span class="line">                <span class="keyword">new</span> Tuple2&lt;&gt;(<span class="string">"world"</span>, <span class="number">24</span>),</span><br><span class="line">                <span class="keyword">new</span> Tuple2&lt;&gt;(<span class="string">"hello"</span>, <span class="number">25</span>),</span><br><span class="line">                <span class="keyword">new</span> Tuple2&lt;&gt;(<span class="string">"you"</span>, <span class="number">28</span>)</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">        JavaPairRDD&lt;String, Integer&gt; words1RDD = sc.parallelizePairs(words1);</span><br><span class="line">        JavaPairRDD&lt;String, Integer&gt; words2RDD = sc.parallelizePairs(words2);</span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/posts/BigData/2019-06-26-Spark-的-cogroup-和-join-算子.html#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/BigData/2019-06-26-Spark-SQL-中-UDF-和-UDAF-的使用.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="朱磊">
-      <meta itemprop="description" content="stone">
-      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="朱磊">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/posts/BigData/2019-06-26-Spark-SQL-中-UDF-和-UDAF-的使用.html" itemprop="url">
-                  Spark SQL 中 UDF 和 UDAF 的使用
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2019-06-26 14:51:00" itemprop="dateCreated datePublished" datetime="2019-06-26T14:51:00+08:00">2019-06-26</time>
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/BigData/" itemprop="url" rel="index"><span itemprop="name">BigData</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>Spark SQL 支持 Hive 的 UDF（User defined functions） 和 UDAF（User defined aggregation functions）</p>
-<p><strong>UDF</strong> 传入参数只能是表中的 1 行数据（可以是多列字段），传出参数也是 1 行，具体使用如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 拼接一行中两列字段，数据类型一个为长整型，一个为字符串</span></span><br><span class="line"><span class="comment"> * Created by zhulei on 2017/6/20.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConcatLongStringUDF</span> <span class="keyword">implements</span> <span class="title">UDF3</span>&lt;<span class="title">Long</span>, <span class="title">String</span>, <span class="title">String</span>, <span class="title">String</span>&gt; </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">call</span><span class="params">(Long v1, String v2, String split)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> String.valueOf(v1) + split + v2;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//然后在 main 方法中注册</span></span><br><span class="line">sqlContext.udf().register(<span class="string">"concat_long_string"</span>, <span class="keyword">new</span> ConcatLongStringUDF(), DataTypes.StringType);</span><br></pre></td></tr></table></figure>
-<p><strong>UDAF</strong> 传入参数是多行的数据，然后通过聚合运算输出一行数据，
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/posts/BigData/2019-06-26-Spark-SQL-中-UDF-和-UDAF-的使用.html#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </p></div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1984,7 +1986,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">87</span>
+                    <span class="site-state-item-count">89</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>

@@ -8,6 +8,13 @@
     </url>
 
     <url>
+        <loc>http://zhuleiblog.com/categories/Linux/</loc>
+        <lastmod>2019-07-28T08:21:32.502Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>http://zhuleiblog.com/categories/Blog/</loc>
         <lastmod>2019-07-27T14:27:02.006Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -66,13 +73,6 @@
     <url>
         <loc>http://zhuleiblog.com/categories/Python/</loc>
         <lastmod>2019-03-09T05:26:51.050Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>http://zhuleiblog.com/categories/Linux/</loc>
-        <lastmod>2019-03-04T06:49:02.760Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>

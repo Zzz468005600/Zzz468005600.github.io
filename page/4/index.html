@@ -246,7 +246,7 @@
           
           <li class="menu-item menu-item-archives">
     <a href="/archives/" rel="section">
-      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">87</span></a>
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">89</span></a>
   </li>
         
         
@@ -288,6 +288,326 @@
           <div id="content" class="content">
             
   <section id="posts" class="posts-expand">
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/BigData/2019-06-04-Spark-的-Yarn-cluster-模式和-Yarn-client-模式.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="朱磊">
+      <meta itemprop="description" content="stone">
+      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="朱磊">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/posts/BigData/2019-06-04-Spark-的-Yarn-cluster-模式和-Yarn-client-模式.html" itemprop="url">
+                  Spark 的 Yarn-cluster 模式和 Yarn-client 模式
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-06-04 14:00:16" itemprop="dateCreated datePublished" datetime="2019-06-04T14:00:16+08:00">2019-06-04</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/BigData/" itemprop="url" rel="index"><span itemprop="name">BigData</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>Spark 支持 Yarn 集群的部署模式，在 Spark On Yarn 模式下，每个 Spark 的 Executor 作为一个 Yarn container 在运行，同事支持多个任务在同一个 container 中运行。</p>
+<p>Yarn 的 Application Master 概念：在 Yarn 中，每个 application 都有一个 Application 都有一个 Application Master 进程，它是 Application 启动的第一个容器，负责从 ResourceManager 中申请资源，分配资源，同时通知 NodeManager 来为 Application 启动 Container。</p>
+<p>Spark On Yarn 有两种模式，一种是 Yarn-client 模式，一种是 Yarn-cluster 模式。一般情况下，Yarn-client 模式使用在调试模式下，Yarn-cluster 模式使用在生产环境中。</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/posts/BigData/2019-06-04-Spark-的-Yarn-cluster-模式和-Yarn-client-模式.html#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/BigData/2019-05-30-Spark-性能优化：代码中常用的几个调整点.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="朱磊">
+      <meta itemprop="description" content="stone">
+      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="朱磊">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/posts/BigData/2019-05-30-Spark-性能优化：代码中常用的几个调整点.html" itemprop="url">
+                  Spark 性能优化：代码中常用的几个调整点
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-05-30 14:14:45" itemprop="dateCreated datePublished" datetime="2019-05-30T14:14:45+08:00">2019-05-30</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/BigData/" itemprop="url" rel="index"><span itemprop="name">BigData</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>前面三篇文章的三种优化方式调整到位之后会让整个 Spark 作业执行速度有非常明显的提升。</p>
+<p>除此之外我们还有很多其它性能优化的手段，但在和前面三种方式比较，正常情况下提升没有那么大。</p>
+<h3 id="1，使用广播变量"><a href="#1，使用广播变量" class="headerlink" title="1，使用广播变量"></a>1，使用广播变量</h3><p>在 task 执行算子函数运算的时候，如果要用到外部变量，这种时候需要使用广播变量。因为，如果不使用广播变量，那么所使用的外部变量会在每个 task 里会获得一份变量的副本，后续传输到各个 worker 节点去计算的时候一方面会加大很多的网络传输，另一方面在 task 计算的时候会占用太大的内存空间（甚至会用到磁盘空间），读写消耗的 IO 也会很多。</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/posts/BigData/2019-05-30-Spark-性能优化：代码中常用的几个调整点.html#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
     
       
 
@@ -1582,336 +1902,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/BigData/2019-05-20-Spark-集群的几种运行模式.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="朱磊">
-      <meta itemprop="description" content="stone">
-      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="朱磊">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/posts/BigData/2019-05-20-Spark-集群的几种运行模式.html" itemprop="url">
-                  Spark 集群的几种运行模式
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2019-05-20 12:13:08" itemprop="dateCreated datePublished" datetime="2019-05-20T12:13:08+08:00">2019-05-20</time>
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/BigData/" itemprop="url" rel="index"><span itemprop="name">BigData</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>一共有这几种模式：</p>
-<ol>
-<li>本地模式</li>
-<li>伪分布模式</li>
-<li>standalone 模式</li>
-<li>基于 YARN(或者其他的第三方资源调度框架)  模式，如下图所示：</li>
-</ol>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/posts/BigData/2019-05-20-Spark-集群的几种运行模式.html#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/BigData/2019-05-16-spark-中几个-join-算子.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="朱磊">
-      <meta itemprop="description" content="stone">
-      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="朱磊">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/posts/BigData/2019-05-16-spark-中几个-join-算子.html" itemprop="url">
-                  Spark 中几个 join 算子
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2019-05-16 14:16:48" itemprop="dateCreated datePublished" datetime="2019-05-16T14:16:48+08:00">2019-05-16</time>
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/BigData/" itemprop="url" rel="index"><span itemprop="name">BigData</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>Spark 中和 join 相关的算子有这几个：<code>join</code>、<code>fullOuterJoin</code>、<code>leftOuterJoin</code>、<code>rightOuterJoin</code></p>
-<p>这几种 join 算子和 sql 中的 join 类似，<code>join</code> 相当于内连接，<code>fullOuterJoin</code> 相当于全连接，<code>leftOuterJoin</code> 相当于左连接，<code>rightOuterJoin</code> 相当于右连接。</p>
-<p>分别解释下这几种连接在 sql 中的含义，spark 中类推：</p>
-<ol>
-<li>内连接：如果表中有至少一个匹配，则返回行。</li>
-<li>左连接：即使右表中没有匹配，也从左表返回所有的行。</li>
-<li>右连接：即使左表中没有匹配，也从右表返回所有的行。</li>
-<li>全连接：只要其中一个表中存在匹配，则返回行。</li>
-</ol>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/posts/BigData/2019-05-16-spark-中几个-join-算子.html#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1961,7 +1951,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">87</span>
+                    <span class="site-state-item-count">89</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
