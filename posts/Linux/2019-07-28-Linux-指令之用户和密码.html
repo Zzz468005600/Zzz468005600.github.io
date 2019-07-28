@@ -97,18 +97,18 @@
     }
   };
 </script>
-  <meta name="description" content="1，修改密码的指令为：passwd 123# passwdChanging password for user root.New password: 按照这个命令可以输入新密码。 2，创建用户的指令为：useradd 1useradd stone 执行这个指令，一个用户就会被创建了。接下来可以自己调用 passwd stone 来设置密码，然后再登陆。切换用户可以使用 su stone 命令。 L">
+  <meta name="description" content="1，修改密码的指令为：passwd 123# passwdChanging password for user root.New password: 按照这个命令可以输入新密码。 2，创建用户的指令为：useradd 1useradd stone 执行这个指令，一个用户就会被创建了。接下来可以自己调用 passwd stone 来设置密码，然后再登陆。切换用户可以使用 su stone 命令。">
 <meta name="keywords" content="Linux">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Linux 指令之用户和密码">
 <meta property="og:url" content="http://zhuleiblog.com/posts/Linux/2019-07-28-Linux-指令之用户和密码.html">
 <meta property="og:site_name" content="朱磊">
-<meta property="og:description" content="1，修改密码的指令为：passwd 123# passwdChanging password for user root.New password: 按照这个命令可以输入新密码。 2，创建用户的指令为：useradd 1useradd stone 执行这个指令，一个用户就会被创建了。接下来可以自己调用 passwd stone 来设置密码，然后再登陆。切换用户可以使用 su stone 命令。 L">
+<meta property="og:description" content="1，修改密码的指令为：passwd 123# passwdChanging password for user root.New password: 按照这个命令可以输入新密码。 2，创建用户的指令为：useradd 1useradd stone 执行这个指令，一个用户就会被创建了。接下来可以自己调用 passwd stone 来设置密码，然后再登陆。切换用户可以使用 su stone 命令。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-07-28T07:18:53.926Z">
+<meta property="og:updated_time" content="2019-07-28T08:26:49.244Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Linux 指令之用户和密码">
-<meta name="twitter:description" content="1，修改密码的指令为：passwd 123# passwdChanging password for user root.New password: 按照这个命令可以输入新密码。 2，创建用户的指令为：useradd 1useradd stone 执行这个指令，一个用户就会被创建了。接下来可以自己调用 passwd stone 来设置密码，然后再登陆。切换用户可以使用 su stone 命令。 L">
+<meta name="twitter:description" content="1，修改密码的指令为：passwd 123# passwdChanging password for user root.New password: 按照这个命令可以输入新密码。 2，创建用户的指令为：useradd 1useradd stone 执行这个指令，一个用户就会被创建了。接下来可以自己调用 passwd stone 来设置密码，然后再登陆。切换用户可以使用 su stone 命令。">
 
 
 
@@ -406,7 +406,7 @@
 <p>按照这个命令可以输入新密码。</p>
 <p><strong>2，创建用户的指令为：</strong><code>useradd</code></p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">useradd stone</span><br></pre></td></tr></table></figure>
-<p>执行这个指令，一个用户就会被创建了。接下来可以自己调用 <code>passwd stone</code> 来设置密码，然后再登陆。切换用户可以使用 <code>su stone</code> 命令。</p>
+<p>执行这个指令，一个用户就会被创建了。接下来可以自己调用 <code>passwd stone</code> 来设置密码，然后再登陆。切换用户可以使用 <code>su stone</code> 命令。<br><a id="more"></a></p>
 <p>Linux 里是 “命令行 + 文件” 的模式。对用用户管理来说，我们通过命令创建的用户，实际上是放在 <code>/etc/passwd</code> 文件里的。这是一个文本文件。我们可以通过 <code>cat</code> 指令，将内容输出再命令行上。</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> cat /etc/passwd</span><br><span class="line">root:x:0:0:root:/root:/bin/bash</span><br><span class="line">...</span><br><span class="line">stone:x:500:500::/home/stone:/bin/bash</span><br></pre></td></tr></table></figure>
 <p>再 <code>/etc/passwd</code> 文件里，我们可以看到 root 用户和我们刚才创建的 stone 用户。x 的地方应该是密码，密码不能放在这里，不然大家都能知道了。接下来的是用户 ID 和组 ID 。</p>

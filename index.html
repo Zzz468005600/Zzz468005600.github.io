@@ -563,29 +563,22 @@
 
       
         
-          
-            <p><strong>1，修改密码的指令为：</strong><code>passwd</code></p>
+          <p><strong>1，修改密码的指令为：</strong><code>passwd</code></p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> passwd</span><br><span class="line">Changing password for user root.</span><br><span class="line">New password:</span><br></pre></td></tr></table></figure>
 <p>按照这个命令可以输入新密码。</p>
 <p><strong>2，创建用户的指令为：</strong><code>useradd</code></p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">useradd stone</span><br></pre></td></tr></table></figure>
-<p>执行这个指令，一个用户就会被创建了。接下来可以自己调用 <code>passwd stone</code> 来设置密码，然后再登陆。切换用户可以使用 <code>su stone</code> 命令。</p>
-<p>Linux 里是 “命令行 + 文件” 的模式。对用用户管理来说，我们通过命令创建的用户，实际上是放在 <code>/etc/passwd</code> 文件里的。这是一个文本文件。我们可以通过 <code>cat</code> 指令，将内容输出再命令行上。</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> cat /etc/passwd</span><br><span class="line">root:x:0:0:root:/root:/bin/bash</span><br><span class="line">...</span><br><span class="line">stone:x:500:500::/home/stone:/bin/bash</span><br></pre></td></tr></table></figure>
-<p>再 <code>/etc/passwd</code> 文件里，我们可以看到 root 用户和我们刚才创建的 stone 用户。x 的地方应该是密码，密码不能放在这里，不然大家都能知道了。接下来的是用户 ID 和组 ID 。</p>
-<p><code>/root</code> 和 <code>/home/stone</code> 分别代表 root 用户和 stone 用户的主目录。主目录是指用户登陆进系统之后默认的路径。</p>
-<p><code>/bin/bash</code> 文件是用于配置登陆后的默认交互命令行的，Linux 登陆后的交互命令行是一个解析脚本程序，这里的配置是 <code>/bin/bash</code>。</p>
-<p><strong>3，删除用户</strong></p>
-<p><code>userdel stone</code>  删除用户 stone。</p>
-<p><strong>4，用户组</strong></p>
-<p>Linux 中用户是分组的，前面的例子创建用户并没有指定哪个组，默认就会创建一个同名的组。</p>
-<p>如果要再创建用户的时候指定组，可以使用 <code>useradd stone1 -g testgroup</code> 来指定新用户所在的组。但这边 -g 后面跟的组别名称一定是已经创建好的，创建组的命令是 <code>groupadd testgroup</code> 。创建的组别信息存储再 <code>/etc/group</code> 这个文件里，可以使用 <code>cat</code> 指令输出到命令行中。</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> cat /etc/group</span><br><span class="line">root:x:0:</span><br><span class="line">...</span><br><span class="line">stone:x:500:</span><br><span class="line">testgroup:x:501:</span><br></pre></td></tr></table></figure>
-<p>上面的第一个字段 root，stone，testgroup 分别是组别的名称，testgroup 就是我们刚才创建的组；第二个字段 x 代表用户组的密码；第三个字段代表用户组的 ID ，可以和上面 <code>/etc/passwd</code> 文件中的用户组 ID 对应起来。</p>
-          
+<p>执行这个指令，一个用户就会被创建了。接下来可以自己调用 <code>passwd stone</code> 来设置密码，然后再登陆。切换用户可以使用 <code>su stone</code> 命令。<br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/posts/Linux/2019-07-28-Linux-指令之用户和密码.html#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
-    </div>
+    </p></div>
 
     
 
