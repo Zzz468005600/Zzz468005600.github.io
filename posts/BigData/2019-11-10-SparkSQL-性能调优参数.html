@@ -105,7 +105,7 @@
 <meta property="og:site_name" content="朱磊">
 <meta property="og:description" content="1，spark.hadoopRDD.ignoreEmptySplits默认是false，如果是true，则会忽略那些空的splits，减小task的数量。 2，spark.hadoop.mapreduce.input.fileinputformat.split.minsize是用于聚合input的小文件，用于控制每个mapTask的输入文件，防止小文件过多时候，产生太多的task。 3，spark">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-11-10T12:08:55.872Z">
+<meta property="og:updated_time" content="2019-11-10T12:10:44.087Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SparkSQL 性能调优参数">
 <meta name="twitter:description" content="1，spark.hadoopRDD.ignoreEmptySplits默认是false，如果是true，则会忽略那些空的splits，减小task的数量。 2，spark.hadoop.mapreduce.input.fileinputformat.split.minsize是用于聚合input的小文件，用于控制每个mapTask的输入文件，防止小文件过多时候，产生太多的task。 3，spark">
@@ -404,6 +404,7 @@
         <h4 id="1，spark-hadoopRDD-ignoreEmptySplits"><a href="#1，spark-hadoopRDD-ignoreEmptySplits" class="headerlink" title="1，spark.hadoopRDD.ignoreEmptySplits"></a>1，spark.hadoopRDD.ignoreEmptySplits</h4><p>默认是false，如果是true，则会忽略那些空的splits，减小task的数量。</p>
 <h4 id="2，spark-hadoop-mapreduce-input-fileinputformat-split-minsize"><a href="#2，spark-hadoop-mapreduce-input-fileinputformat-split-minsize" class="headerlink" title="2，spark.hadoop.mapreduce.input.fileinputformat.split.minsize"></a>2，spark.hadoop.mapreduce.input.fileinputformat.split.minsize</h4><p>是用于聚合input的小文件，用于控制每个mapTask的输入文件，防止小文件过多时候，产生太多的task。</p>
 <h4 id="3，spark-sql-autoBroadcastJoinThreshold-amp-amp-spark-sql-broadcastTimeout"><a href="#3，spark-sql-autoBroadcastJoinThreshold-amp-amp-spark-sql-broadcastTimeout" class="headerlink" title="3，spark.sql.autoBroadcastJoinThreshold &amp;&amp; spark.sql.broadcastTimeout"></a>3，spark.sql.autoBroadcastJoinThreshold &amp;&amp; spark.sql.broadcastTimeout</h4><p>用于控制在 spark sql 中使用 BroadcastJoin 时候表的大小阈值，适当增大可以让一些表走 BroadcastJoin，提升性能，但是如果设置太大又会造成 driver 内存压力，而 broadcastTimeout 是用于控制 Broadcast 的 Future 的超时时间，默认是 300s，可根据需求进行调整。</p>
+<a id="more"></a>
 <h4 id="4，spark-sql-adaptive-enabled-amp-amp-spark-sql-adaptive-shuffle-targetPostShuffleInputSize"><a href="#4，spark-sql-adaptive-enabled-amp-amp-spark-sql-adaptive-shuffle-targetPostShuffleInputSize" class="headerlink" title="4，spark.sql.adaptive.enabled &amp;&amp; spark.sql.adaptive.shuffle.targetPostShuffleInputSize"></a>4，spark.sql.adaptive.enabled &amp;&amp; spark.sql.adaptive.shuffle.targetPostShuffleInputSize</h4><p>该参数是用于开启 spark 的自适应执行，后面的 targetPostShuffleInputSize 是用于控制之后的 shuffle 阶段的平均输入数据大小，防止产生过多的task。</p>
 <p>关于 spark 的自适应执行相关参数可看这篇文章：<a href="https://www.alibabacloud.com/help/zh/doc-detail/93157.htm" target="_blank" rel="noopener">https://www.alibabacloud.com/help/zh/doc-detail/93157.htm</a></p>
 <h4 id="5，spark-sql-parquet-mergeSchema"><a href="#5，spark-sql-parquet-mergeSchema" class="headerlink" title="5，spark.sql.parquet.mergeSchema"></a>5，spark.sql.parquet.mergeSchema</h4><p>默认 false。当设为 true，parquet 会聚合所有 parquet 文件的 schema，否则是直接读取 parquet summary 文件，或者在没有 parquet summary 文件时候随机选择一个文件的 schema 作为最终的 schema。</p>

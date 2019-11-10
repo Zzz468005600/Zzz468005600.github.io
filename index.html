@@ -403,16 +403,16 @@
 
       
         
-          
-            <h4 id="1，spark-hadoopRDD-ignoreEmptySplits"><a href="#1，spark-hadoopRDD-ignoreEmptySplits" class="headerlink" title="1，spark.hadoopRDD.ignoreEmptySplits"></a>1，spark.hadoopRDD.ignoreEmptySplits</h4><p>默认是false，如果是true，则会忽略那些空的splits，减小task的数量。</p>
+          <h4 id="1，spark-hadoopRDD-ignoreEmptySplits"><a href="#1，spark-hadoopRDD-ignoreEmptySplits" class="headerlink" title="1，spark.hadoopRDD.ignoreEmptySplits"></a>1，spark.hadoopRDD.ignoreEmptySplits</h4><p>默认是false，如果是true，则会忽略那些空的splits，减小task的数量。</p>
 <h4 id="2，spark-hadoop-mapreduce-input-fileinputformat-split-minsize"><a href="#2，spark-hadoop-mapreduce-input-fileinputformat-split-minsize" class="headerlink" title="2，spark.hadoop.mapreduce.input.fileinputformat.split.minsize"></a>2，spark.hadoop.mapreduce.input.fileinputformat.split.minsize</h4><p>是用于聚合input的小文件，用于控制每个mapTask的输入文件，防止小文件过多时候，产生太多的task。</p>
 <h4 id="3，spark-sql-autoBroadcastJoinThreshold-amp-amp-spark-sql-broadcastTimeout"><a href="#3，spark-sql-autoBroadcastJoinThreshold-amp-amp-spark-sql-broadcastTimeout" class="headerlink" title="3，spark.sql.autoBroadcastJoinThreshold &amp;&amp; spark.sql.broadcastTimeout"></a>3，spark.sql.autoBroadcastJoinThreshold &amp;&amp; spark.sql.broadcastTimeout</h4><p>用于控制在 spark sql 中使用 BroadcastJoin 时候表的大小阈值，适当增大可以让一些表走 BroadcastJoin，提升性能，但是如果设置太大又会造成 driver 内存压力，而 broadcastTimeout 是用于控制 Broadcast 的 Future 的超时时间，默认是 300s，可根据需求进行调整。</p>
-<h4 id="4，spark-sql-adaptive-enabled-amp-amp-spark-sql-adaptive-shuffle-targetPostShuffleInputSize"><a href="#4，spark-sql-adaptive-enabled-amp-amp-spark-sql-adaptive-shuffle-targetPostShuffleInputSize" class="headerlink" title="4，spark.sql.adaptive.enabled &amp;&amp; spark.sql.adaptive.shuffle.targetPostShuffleInputSize"></a>4，spark.sql.adaptive.enabled &amp;&amp; spark.sql.adaptive.shuffle.targetPostShuffleInputSize</h4><p>该参数是用于开启 spark 的自适应执行，后面的 targetPostShuffleInputSize 是用于控制之后的 shuffle 阶段的平均输入数据大小，防止产生过多的task。</p>
-<p>关于 spark 的自适应执行相关参数可看这篇文章：<a href="https://www.alibabacloud.com/help/zh/doc-detail/93157.htm" target="_blank" rel="noopener">https://www.alibabacloud.com/help/zh/doc-detail/93157.htm</a></p>
-<h4 id="5，spark-sql-parquet-mergeSchema"><a href="#5，spark-sql-parquet-mergeSchema" class="headerlink" title="5，spark.sql.parquet.mergeSchema"></a>5，spark.sql.parquet.mergeSchema</h4><p>默认 false。当设为 true，parquet 会聚合所有 parquet 文件的 schema，否则是直接读取 parquet summary 文件，或者在没有 parquet summary 文件时候随机选择一个文件的 schema 作为最终的 schema。</p>
-<h4 id="6，spark-sql-files-opencostInBytes"><a href="#6，spark-sql-files-opencostInBytes" class="headerlink" title="6，spark.sql.files.opencostInBytes"></a>6，spark.sql.files.opencostInBytes</h4><p>该参数默认 4M，表示小于 4M 的小文件会合并到一个分区中，用于减小小文件，防止太多单个小文件占一个分区情况。</p>
-<h4 id="7，spark-hadoop-mapreduce-fileoutputcommitter-algorithm-version"><a href="#7，spark-hadoop-mapreduce-fileoutputcommitter-algorithm-version" class="headerlink" title="7，spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version"></a>7，spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version</h4><p>1 或者 2，默认是 1. MapReduce-4815 详细介绍了 fileoutputcommitter 的原理，实践中设置了 version=2 的比默认 version=1 的减少了70%以上的 commit 时间，但是1更健壮，能处理一些情况下的异常。</p>
-          
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/posts/BigData/2019-11-10-SparkSQL-性能调优参数.html#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
