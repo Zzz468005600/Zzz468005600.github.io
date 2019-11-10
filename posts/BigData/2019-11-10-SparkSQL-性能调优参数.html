@@ -97,24 +97,25 @@
     }
   };
 </script>
-  <meta name="description" content="stone">
-<meta name="keywords" content="zhulei stone Zhulei">
-<meta property="og:type" content="website">
-<meta property="og:title" content="朱磊">
-<meta property="og:url" content="http://zhuleiblog.com/tags/测试/index.html">
+  <meta name="description" content="1，spark.hadoopRDD.ignoreEmptySplits默认是false，如果是true，则会忽略那些空的splits，减小task的数量。 2，spark.hadoop.mapreduce.input.fileinputformat.split.minsize是用于聚合input的小文件，用于控制每个mapTask的输入文件，防止小文件过多时候，产生太多的task。 3，spark">
+<meta name="keywords" content="Spark">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SparkSQL 性能调优参数">
+<meta property="og:url" content="http://zhuleiblog.com/posts/BigData/2019-11-10-SparkSQL-性能调优参数.html">
 <meta property="og:site_name" content="朱磊">
-<meta property="og:description" content="stone">
+<meta property="og:description" content="1，spark.hadoopRDD.ignoreEmptySplits默认是false，如果是true，则会忽略那些空的splits，减小task的数量。 2，spark.hadoop.mapreduce.input.fileinputformat.split.minsize是用于聚合input的小文件，用于控制每个mapTask的输入文件，防止小文件过多时候，产生太多的task。 3，spark">
 <meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-11-10T12:08:55.872Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="朱磊">
-<meta name="twitter:description" content="stone">
+<meta name="twitter:title" content="SparkSQL 性能调优参数">
+<meta name="twitter:description" content="1，spark.hadoopRDD.ignoreEmptySplits默认是false，如果是true，则会忽略那些空的splits，减小task的数量。 2，spark.hadoop.mapreduce.input.fileinputformat.split.minsize是用于聚合input的小文件，用于控制每个mapTask的输入文件，防止小文件过多时候，产生太多的task。 3，spark">
 
 
 
 
 
 
-  <link rel="canonical" href="http://zhuleiblog.com/tags/测试/">
+  <link rel="canonical" href="http://zhuleiblog.com/posts/BigData/2019-11-10-SparkSQL-性能调优参数.html">
 
 
 
@@ -124,7 +125,7 @@
   };
 </script>
 
-  <title>标签: 测试 | 朱磊</title>
+  <title>SparkSQL 性能调优参数 | 朱磊</title>
   
 
 
@@ -180,7 +181,7 @@
     
   
 
-  <div class="container sidebar-position-left">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -228,7 +229,7 @@
         
         
           
-          <li class="menu-item menu-item-tags menu-item-active">
+          <li class="menu-item menu-item-tags">
     <a href="/tags/" rel="section">
       <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签<span class="badge">70</span></a>
   </li>
@@ -284,82 +285,199 @@
           
             
 
-    
-    
-      
-      
-    
-      
-      
-    
-      
-      
-    
-      
-      
-    
-      
-      
-    
-    
-
-  
-
-
           
           <div id="content" class="content">
             
 
-  
-  
-  
-  <div class="post-block tag">
+  <div id="posts" class="posts-expand">
+    
 
-    <div id="posts" class="posts-collapse">
-      <div class="collection-title">
-        <h1>测试<small>标签</small>
-        </h1>
-      </div>
+  
 
-      
-        
+  
+  
+  
+
+  
+    <div class="reading-progress-bar"></div>
+  
 
   <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/BigData/2019-11-10-SparkSQL-性能调优参数.html">
 
-      <h2 class="post-title">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="朱磊">
+      <meta itemprop="description" content="stone">
+      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="朱磊">
+    </span>
+
+    
+      <header class="post-header">
+
         
-            <a class="post-title-link" href="/posts/Python/2018-06-20-Python学习之错误调试和测试.html" itemprop="url">
-              
-                <span itemprop="name">Python学习之错误调试和测试</span>
-              
-            </a>
         
-      </h2>
+          <h1 class="post-title" itemprop="name headline">SparkSQL 性能调优参数
+              
+            
+          </h1>
+        
 
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated" datetime="2018-06-20T07:33:22+08:00" content="2018-06-20">
-          06-20
-        </time>
-      </div>
+        <div class="post-meta">
+          <span class="post-time">
 
-    </header>
-  </article>
+            
+            
+            
 
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
 
+              
+                
+              
+
+              <time title="创建时间：2019-11-10 20:07:02" itemprop="dateCreated datePublished" datetime="2019-11-10T20:07:02+08:00">2019-11-10</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/BigData/" itemprop="url" rel="index"><span itemprop="name">BigData</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="1，spark-hadoopRDD-ignoreEmptySplits"><a href="#1，spark-hadoopRDD-ignoreEmptySplits" class="headerlink" title="1，spark.hadoopRDD.ignoreEmptySplits"></a>1，spark.hadoopRDD.ignoreEmptySplits</h4><p>默认是false，如果是true，则会忽略那些空的splits，减小task的数量。</p>
+<h4 id="2，spark-hadoop-mapreduce-input-fileinputformat-split-minsize"><a href="#2，spark-hadoop-mapreduce-input-fileinputformat-split-minsize" class="headerlink" title="2，spark.hadoop.mapreduce.input.fileinputformat.split.minsize"></a>2，spark.hadoop.mapreduce.input.fileinputformat.split.minsize</h4><p>是用于聚合input的小文件，用于控制每个mapTask的输入文件，防止小文件过多时候，产生太多的task。</p>
+<h4 id="3，spark-sql-autoBroadcastJoinThreshold-amp-amp-spark-sql-broadcastTimeout"><a href="#3，spark-sql-autoBroadcastJoinThreshold-amp-amp-spark-sql-broadcastTimeout" class="headerlink" title="3，spark.sql.autoBroadcastJoinThreshold &amp;&amp; spark.sql.broadcastTimeout"></a>3，spark.sql.autoBroadcastJoinThreshold &amp;&amp; spark.sql.broadcastTimeout</h4><p>用于控制在 spark sql 中使用 BroadcastJoin 时候表的大小阈值，适当增大可以让一些表走 BroadcastJoin，提升性能，但是如果设置太大又会造成 driver 内存压力，而 broadcastTimeout 是用于控制 Broadcast 的 Future 的超时时间，默认是 300s，可根据需求进行调整。</p>
+<h4 id="4，spark-sql-adaptive-enabled-amp-amp-spark-sql-adaptive-shuffle-targetPostShuffleInputSize"><a href="#4，spark-sql-adaptive-enabled-amp-amp-spark-sql-adaptive-shuffle-targetPostShuffleInputSize" class="headerlink" title="4，spark.sql.adaptive.enabled &amp;&amp; spark.sql.adaptive.shuffle.targetPostShuffleInputSize"></a>4，spark.sql.adaptive.enabled &amp;&amp; spark.sql.adaptive.shuffle.targetPostShuffleInputSize</h4><p>该参数是用于开启 spark 的自适应执行，后面的 targetPostShuffleInputSize 是用于控制之后的 shuffle 阶段的平均输入数据大小，防止产生过多的task。</p>
+<p>关于 spark 的自适应执行相关参数可看这篇文章：<a href="https://www.alibabacloud.com/help/zh/doc-detail/93157.htm" target="_blank" rel="noopener">https://www.alibabacloud.com/help/zh/doc-detail/93157.htm</a></p>
+<h4 id="5，spark-sql-parquet-mergeSchema"><a href="#5，spark-sql-parquet-mergeSchema" class="headerlink" title="5，spark.sql.parquet.mergeSchema"></a>5，spark.sql.parquet.mergeSchema</h4><p>默认 false。当设为 true，parquet 会聚合所有 parquet 文件的 schema，否则是直接读取 parquet summary 文件，或者在没有 parquet summary 文件时候随机选择一个文件的 schema 作为最终的 schema。</p>
+<h4 id="6，spark-sql-files-opencostInBytes"><a href="#6，spark-sql-files-opencostInBytes" class="headerlink" title="6，spark.sql.files.opencostInBytes"></a>6，spark.sql.files.opencostInBytes</h4><p>该参数默认 4M，表示小于 4M 的小文件会合并到一个分区中，用于减小小文件，防止太多单个小文件占一个分区情况。</p>
+<h4 id="7，spark-hadoop-mapreduce-fileoutputcommitter-algorithm-version"><a href="#7，spark-hadoop-mapreduce-fileoutputcommitter-algorithm-version" class="headerlink" title="7，spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version"></a>7，spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version</h4><p>1 或者 2，默认是 1. MapReduce-4815 详细介绍了 fileoutputcommitter 的原理，实践中设置了 version=2 的比默认 version=1 的减少了70%以上的 commit 时间，但是1更健壮，能处理一些情况下的异常。</p>
       
     </div>
 
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Spark/" rel="tag"># Spark</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/Linux/2019-07-28-Linux-指令之安装软件.html" rel="next" title="Linux 指令之安装软件">
+                <i class="fa fa-chevron-left"></i> Linux 指令之安装软件
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
   </div>
   
   
   
+  </article>
 
-  
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
           
+
+  
+
+
 
         </div>
         
@@ -380,8 +498,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -651,6 +778,22 @@
       </section>
 
       
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1，spark-hadoopRDD-ignoreEmptySplits"><span class="nav-text">1，spark.hadoopRDD.ignoreEmptySplits</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2，spark-hadoop-mapreduce-input-fileinputformat-split-minsize"><span class="nav-text">2，spark.hadoop.mapreduce.input.fileinputformat.split.minsize</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3，spark-sql-autoBroadcastJoinThreshold-amp-amp-spark-sql-broadcastTimeout"><span class="nav-text">3，spark.sql.autoBroadcastJoinThreshold &amp;&amp; spark.sql.broadcastTimeout</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4，spark-sql-adaptive-enabled-amp-amp-spark-sql-adaptive-shuffle-targetPostShuffleInputSize"><span class="nav-text">4，spark.sql.adaptive.enabled &amp;&amp; spark.sql.adaptive.shuffle.targetPostShuffleInputSize</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5，spark-sql-parquet-mergeSchema"><span class="nav-text">5，spark.sql.parquet.mergeSchema</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6，spark-sql-files-opencostInBytes"><span class="nav-text">6，spark.sql.files.opencostInBytes</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7，spark-hadoop-mapreduce-fileoutputcommitter-algorithm-version"><span class="nav-text">7，spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
 
       
 
@@ -775,6 +918,10 @@
 
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
 
   
 

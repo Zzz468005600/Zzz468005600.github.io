@@ -246,7 +246,7 @@
           
           <li class="menu-item menu-item-archives">
     <a href="/archives/" rel="section">
-      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">89</span></a>
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">90</span></a>
   </li>
         
         
@@ -288,6 +288,166 @@
           <div id="content" class="content">
             
   <section id="posts" class="posts-expand">
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/BigData/2019-11-10-SparkSQL-性能调优参数.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="朱磊">
+      <meta itemprop="description" content="stone">
+      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="朱磊">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/posts/BigData/2019-11-10-SparkSQL-性能调优参数.html" itemprop="url">
+                  SparkSQL 性能调优参数
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-11-10 20:07:02" itemprop="dateCreated datePublished" datetime="2019-11-10T20:07:02+08:00">2019-11-10</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/BigData/" itemprop="url" rel="index"><span itemprop="name">BigData</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="1，spark-hadoopRDD-ignoreEmptySplits"><a href="#1，spark-hadoopRDD-ignoreEmptySplits" class="headerlink" title="1，spark.hadoopRDD.ignoreEmptySplits"></a>1，spark.hadoopRDD.ignoreEmptySplits</h4><p>默认是false，如果是true，则会忽略那些空的splits，减小task的数量。</p>
+<h4 id="2，spark-hadoop-mapreduce-input-fileinputformat-split-minsize"><a href="#2，spark-hadoop-mapreduce-input-fileinputformat-split-minsize" class="headerlink" title="2，spark.hadoop.mapreduce.input.fileinputformat.split.minsize"></a>2，spark.hadoop.mapreduce.input.fileinputformat.split.minsize</h4><p>是用于聚合input的小文件，用于控制每个mapTask的输入文件，防止小文件过多时候，产生太多的task。</p>
+<h4 id="3，spark-sql-autoBroadcastJoinThreshold-amp-amp-spark-sql-broadcastTimeout"><a href="#3，spark-sql-autoBroadcastJoinThreshold-amp-amp-spark-sql-broadcastTimeout" class="headerlink" title="3，spark.sql.autoBroadcastJoinThreshold &amp;&amp; spark.sql.broadcastTimeout"></a>3，spark.sql.autoBroadcastJoinThreshold &amp;&amp; spark.sql.broadcastTimeout</h4><p>用于控制在 spark sql 中使用 BroadcastJoin 时候表的大小阈值，适当增大可以让一些表走 BroadcastJoin，提升性能，但是如果设置太大又会造成 driver 内存压力，而 broadcastTimeout 是用于控制 Broadcast 的 Future 的超时时间，默认是 300s，可根据需求进行调整。</p>
+<h4 id="4，spark-sql-adaptive-enabled-amp-amp-spark-sql-adaptive-shuffle-targetPostShuffleInputSize"><a href="#4，spark-sql-adaptive-enabled-amp-amp-spark-sql-adaptive-shuffle-targetPostShuffleInputSize" class="headerlink" title="4，spark.sql.adaptive.enabled &amp;&amp; spark.sql.adaptive.shuffle.targetPostShuffleInputSize"></a>4，spark.sql.adaptive.enabled &amp;&amp; spark.sql.adaptive.shuffle.targetPostShuffleInputSize</h4><p>该参数是用于开启 spark 的自适应执行，后面的 targetPostShuffleInputSize 是用于控制之后的 shuffle 阶段的平均输入数据大小，防止产生过多的task。</p>
+<p>关于 spark 的自适应执行相关参数可看这篇文章：<a href="https://www.alibabacloud.com/help/zh/doc-detail/93157.htm" target="_blank" rel="noopener">https://www.alibabacloud.com/help/zh/doc-detail/93157.htm</a></p>
+<h4 id="5，spark-sql-parquet-mergeSchema"><a href="#5，spark-sql-parquet-mergeSchema" class="headerlink" title="5，spark.sql.parquet.mergeSchema"></a>5，spark.sql.parquet.mergeSchema</h4><p>默认 false。当设为 true，parquet 会聚合所有 parquet 文件的 schema，否则是直接读取 parquet summary 文件，或者在没有 parquet summary 文件时候随机选择一个文件的 schema 作为最终的 schema。</p>
+<h4 id="6，spark-sql-files-opencostInBytes"><a href="#6，spark-sql-files-opencostInBytes" class="headerlink" title="6，spark.sql.files.opencostInBytes"></a>6，spark.sql.files.opencostInBytes</h4><p>该参数默认 4M，表示小于 4M 的小文件会合并到一个分区中，用于减小小文件，防止太多单个小文件占一个分区情况。</p>
+<h4 id="7，spark-hadoop-mapreduce-fileoutputcommitter-algorithm-version"><a href="#7，spark-hadoop-mapreduce-fileoutputcommitter-algorithm-version" class="headerlink" title="7，spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version"></a>7，spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version</h4><p>1 或者 2，默认是 1. MapReduce-4815 详细介绍了 fileoutputcommitter 的原理，实践中设置了 version=2 的比默认 version=1 的减少了70%以上的 commit 时间，但是1更健壮，能处理一些情况下的异常。</p>
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
     
       
 
@@ -1736,166 +1896,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://zhuleiblog.com/posts/BigData/2019-07-02-Spark-源码解析（六）-向-driver-注册-Executor.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="朱磊">
-      <meta itemprop="description" content="stone">
-      <meta itemprop="image" content="http://stonezhu.top/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="朱磊">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/posts/BigData/2019-07-02-Spark-源码解析（六）-向-driver-注册-Executor.html" itemprop="url">
-                  Spark 源码分析（六）: 向 driver 注册 Executor
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2019-07-02 17:46:03" itemprop="dateCreated datePublished" datetime="2019-07-02T17:46:03+08:00">2019-07-02</time>
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/BigData/" itemprop="url" rel="index"><span itemprop="name">BigData</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>前一篇文章介绍了 Executor 进程的启动，最后启动的是 CoarseGrainedExecutorBackend，执行启动命令后会执行它的 main 方法，启动 CoarseGrainedExecutorBackend 进程。</p>
-<p>CoarseGrainedExecutorBackend 进程是 Executor 的守护进程，用户 Executor 的创建和维护。</p>
-<p>首先我们先看下 main 方法，主要就是获取相关参数，然后调用 run 方法。</p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/posts/BigData/2019-07-02-Spark-源码解析（六）-向-driver-注册-Executor.html#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1945,7 +1945,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">89</span>
+                    <span class="site-state-item-count">90</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
