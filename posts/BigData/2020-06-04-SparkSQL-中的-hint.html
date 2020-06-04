@@ -105,7 +105,7 @@
 <meta property="og:site_name" content="朱磊">
 <meta property="og:description" content="SparkSQL 2.2 增加了 Hint Framework 的支持，允许在查询中加入注释，让查询优化器优化逻辑计划。目前支持的 hint 有三个：COALESCE、REPARTITION、BROADCAST，其中 COALESCE、REPARTITION 这两个是 SparkSQL 2.4 开始支持。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-06-04T14:40:10.198Z">
+<meta property="og:updated_time" content="2020-06-04T15:06:09.365Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SparkSQL 中的 hint">
 <meta name="twitter:description" content="SparkSQL 2.2 增加了 Hint Framework 的支持，允许在查询中加入注释，让查询优化器优化逻辑计划。目前支持的 hint 有三个：COALESCE、REPARTITION、BROADCAST，其中 COALESCE、REPARTITION 这两个是 SparkSQL 2.4 开始支持。">
@@ -403,8 +403,7 @@
       
         <p>SparkSQL 2.2 增加了 Hint Framework 的支持，允许在查询中加入注释，让查询优化器优化逻辑计划。目前支持的 hint 有三个：COALESCE、REPARTITION、BROADCAST，其中 COALESCE、REPARTITION 这两个是 SparkSQL 2.4 开始支持。</p>
 <a id="more"></a>
-<p>###一、COALESCE、REPARTITION 使用</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="comment">/*+ COALESCE(2) */</span> ...</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> <span class="comment">/*+ REPARTITION(10) */</span> ...</span><br></pre></td></tr></table></figure>
+<h3 id="一、COALESCE、REPARTITION-使用"><a href="#一、COALESCE、REPARTITION-使用" class="headerlink" title="一、COALESCE、REPARTITION 使用"></a>一、COALESCE、REPARTITION 使用</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="comment">/*+ COALESCE(2) */</span> ...</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> <span class="comment">/*+ REPARTITION(10) */</span> ...</span><br></pre></td></tr></table></figure>
 <p>这两个 hint 是从 SparkSQL 2.4 开始支持</p>
 <h3 id="二、BROADCAST-使用"><a href="#二、BROADCAST-使用" class="headerlink" title="二、BROADCAST 使用"></a>二、BROADCAST 使用</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="comment">/*+ MAPJOIN(a) */</span> ...</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> <span class="comment">/*+ BROADCASTJOIN(a) */</span> ...</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> <span class="comment">/*+ BROADCAST(a) */</span> ...</span><br></pre></td></tr></table></figure>
 <p>该 hint 是从 SparkSQL 2.2 开始支持</p>
@@ -789,7 +788,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#二、BROADCAST-使用"><span class="nav-text">二、BROADCAST 使用</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#一、COALESCE、REPARTITION-使用"><span class="nav-text">一、COALESCE、REPARTITION 使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#二、BROADCAST-使用"><span class="nav-text">二、BROADCAST 使用</span></a></li></ol></div>
             
 
           </div>
